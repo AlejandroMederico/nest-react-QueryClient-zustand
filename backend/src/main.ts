@@ -10,9 +10,45 @@ import { AppModule } from './app.module';
 import { Role } from './enums/role.enum';
 import { User } from './user/user.entity';
 
+/* =========================
+   ENV/CONFIG (una sola vez)
+   ========================= */
+const PORT = Number(process.env.PORT ?? 5000);
+const NODE_ENV = process.env.NODE_ENV ?? 'development';
+const COOKIE_SECRET = process.env.COOKIE_SECRET ?? '';
+const RAW_ORIGINS = (process.env.CORS_ORIGINS ?? '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+/* =========================
+   Helpers “mini”
+   ========================= */
+function corsOrigin(
+  origin: string | undefined,
+  cb: (err: Error | null, ok?: boolean) => void,
+) {
+  // CLI / tools y same-origin (Swagger)
+  if (!origin || origin === `http://localhost:${PORT}`) return cb(null, true);
+  if (RAW_ORIGINS.length === 0 || RAW_ORIGINS.includes(origin))
+    return cb(null, true);
+  return cb(new Error('CORS: Origin not allowed'), false);
+}
+
+function setupSwagger(app) {
+  if (NODE_ENV === 'production') return;
+  const cfg = new DocumentBuilder()
+    .setTitle('Carna Project API')
+    .setDescription('Carna Project API Documentation')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const doc = SwaggerModule.createDocument(app, cfg);
+  SwaggerModule.setup('/api/docs', app, doc);
+}
+
 async function createAdminOnFirstUse() {
   const admin = await User.findOne({ where: { username: 'admin' } });
-
   if (!admin) {
     await User.create({
       firstName: 'admin',
@@ -28,35 +64,26 @@ async function createAdminOnFirstUse() {
   }
 }
 
+/* =========================
+   Bootstrap
+   ========================= */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   app.enableShutdownHooks();
   app.setGlobalPrefix('api');
-  app.use(cookieParser(process.env.COOKIE_SECRET ?? ''));
+
+  // Middlewares
+  app.use(cookieParser(COOKIE_SECRET));
   app.use(helmet());
   app.enableCors({
-    origin: (origin, cb) => {
-      const origins = (process.env.CORS_ORIGINS ?? '')
-        .split(',')
-        .map((o) => o.trim())
-        .filter(Boolean);
-      // permite CLI y same-origin (Swagger en :5000)
-      if (
-        !origin ||
-        origin === `http://localhost:${process.env.PORT ?? 5000}`
-      ) {
-        return cb(null, true);
-      }
-      if (origins.length === 0 || origins.includes(origin)) {
-        return cb(null, true);
-      }
-      return cb(new Error('CORS: Origin not allowed'), false);
-    },
+    origin: corsOrigin,
     credentials: true,
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   });
 
+  // Validación global
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -65,22 +92,21 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
-  if (process.env.NODE_ENV !== 'production') {
-    const config = new DocumentBuilder()
-      .setTitle('Carna Project API')
-      .setDescription('Carna Project API Documentation')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('/api/docs', app, document);
-  }
 
+  // Docs
+  setupSwagger(app);
+
+  // Seed (igual que antes)
   await createAdminOnFirstUse();
 
-  const port = Number(process.env.PORT ?? 5000);
-  const server: Server = await app.listen(port);
-  const shutdown = async (sig: string) => {
+  // Listen + shutdown limpio
+  const server: Server = await app.listen(PORT);
+  console.log(`[Carna] ${NODE_ENV} → http://localhost:${PORT}/api`);
+  if (NODE_ENV !== 'production') {
+    console.log(`Swagger → http://localhost:${PORT}/api/docs`);
+  }
+
+  const shutdown = async () => {
     try {
       await app.close();
       server.close(() => process.exit(0));
@@ -90,10 +116,12 @@ async function bootstrap() {
     }
   };
   ['SIGINT', 'SIGTERM', 'SIGQUIT', 'SIGUSR2'].forEach((sig) =>
-    process.on(sig as NodeJS.Signals, () => shutdown(sig)),
+    process.on(sig as NodeJS.Signals, shutdown),
   );
+  process.on('uncaughtException', shutdown);
+  process.on('unhandledRejection', shutdown);
 }
-// al final de main.ts
+
 if (require.main === module) {
   bootstrap();
 }
