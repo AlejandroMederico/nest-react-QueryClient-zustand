@@ -5,6 +5,13 @@ module.exports = {
   username: process.env.DATABASE_USERNAME,
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
-  entities: ['dist/**/*.entity{.ts,.js}'],
-  synchronize: true,
+  entities: ['dist/**/*.entity.js'],
+  synchronize: false,
+  migrations: ['dist/migrations/*.js'],
+  logging: ['warn', 'error'],
+  maxQueryExecutionTime: 100,
+  extra: {
+    max: Number(process.env.DB_POOL_MAX ?? 20),
+    statement_timeout: Number(process.env.DB_STMT_MS ?? 0),
+  },
 };
