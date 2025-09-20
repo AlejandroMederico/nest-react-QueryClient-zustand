@@ -1,13 +1,14 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: 'tsconfig.json',
+    project: ['./tsconfig.json', './tsconfig.build.json'],
     sourceType: 'module',
+    tsconfigRootDir: __dirname,
   },
   plugins: ['@typescript-eslint/eslint-plugin', 'simple-import-sort'],
   extends: [
     'plugin:@typescript-eslint/recommended',
-    'prettier/@typescript-eslint',
+    'prettier',
     'plugin:prettier/recommended',
   ],
   root: true,
@@ -16,6 +17,12 @@ module.exports = {
     jest: true,
   },
   ignorePatterns: ['.eslintrc.js'],
+    overrides: [
+    {
+      files: ['*.js'],
+      parserOptions: { project: null },
+    },
+  ],
   rules: {
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',

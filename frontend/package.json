@@ -24,10 +24,15 @@
     "web-vitals": "^1.0.1"
   },
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test",
-    "eject": "react-scripts eject"
+    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider craco start",
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider craco build",
+    "test": "cross-env NODE_OPTIONS=--openssl-legacy-provider craco test",
+    "eject": "cross-env NODE_OPTIONS=--openssl-legacy-provider craco eject"
+  },
+  "resolutions": {
+    "postcss": "7.0.39",
+    "postcss-safe-parser": "5.0.2",
+    "cssnano": "4.1.11"
   },
   "eslintConfig": {
     "extends": [
@@ -41,7 +46,12 @@
     "rules": {
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
-      "prettier/prettier": "error",
+      "prettier/prettier": [
+        "error",
+        {
+          "endOfLine": "auto"
+        }
+      ],
       "react-hooks/exhaustive-deps": "off"
     }
   },
@@ -61,6 +71,7 @@
   "devDependencies": {
     "@types/react-router-dom": "^5.1.7",
     "autoprefixer": "^9",
+    "cross-env": "7.0.3",
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "postcss": "^7",
