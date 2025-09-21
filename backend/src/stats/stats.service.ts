@@ -13,10 +13,16 @@ export class StatsService {
     private readonly contentService: ContentService,
   ) {}
   async getStats(): Promise<StatsResponseDto> {
-    const numberOfUsers = await this.userService.count();
-    const numberOfCourses = await this.courseService.count();
-    const numberOfContents = await this.contentService.count();
+    try {
+      const numberOfUsers = await this.userService.count();
+      const numberOfCourses = await this.courseService.count();
+      const numberOfContents = await this.contentService.count();
 
-    return { numberOfUsers, numberOfContents, numberOfCourses };
+      return { numberOfUsers, numberOfContents, numberOfCourses };
+    } catch (error) {
+      throw new Error(
+        `An error StatsService.getStats message: ${error.message}`,
+      );
+    }
   }
 }
