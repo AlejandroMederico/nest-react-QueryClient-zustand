@@ -1,10 +1,15 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+import { JwtGuard } from '../auth/guards/jwt.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { StatsResponseDto } from './stats.dto';
 import { StatsService } from './stats.service';
 
 @Controller('stats')
+@ApiBearerAuth()
+@UseGuards(JwtGuard, RolesGuard)
 @ApiTags('Stats')
 export class StatsController {
   constructor(private readonly statsService: StatsService) {}
