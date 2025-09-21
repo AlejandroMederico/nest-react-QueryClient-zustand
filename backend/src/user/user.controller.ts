@@ -67,10 +67,4 @@ export class UserController {
   async softDelete(@Param('id') id: string): Promise<void> {
     return await this.userService.softDelete(id);
   }
-
-  @Get('/active')
-  @HttpCode(HttpStatus.OK)
-  async findActiveUsers(@Query() userQuery: UserQuery): Promise<User[]> {
-    return await this.userService.findActiveUsers(userQuery);
-  }
 }

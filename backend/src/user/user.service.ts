@@ -107,20 +107,4 @@ export class UserService {
     user.isActive = false;
     await user.save();
   }
-
-  async findActiveUsers(userQuery: UserQuery): Promise<User[]> {
-    Object.keys(userQuery).forEach((key) => {
-      if (key !== 'role') {
-        userQuery[key] = ILike(`%${userQuery[key]}%`);
-      }
-    });
-
-    return User.find({
-      where: { ...userQuery, isActive: true },
-      order: {
-        firstName: 'ASC',
-        lastName: 'ASC',
-      },
-    });
-  }
 }
