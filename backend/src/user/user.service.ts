@@ -96,4 +96,31 @@ export class UserService {
       refreshToken: refreshToken ? await bcrypt.hash(refreshToken, 10) : null,
     });
   }
+
+  async softDelete(userId: string): Promise<void> {
+    const user = await User.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    user.isActive = false;
+    await user.save();
+  }
+
+  async findActiveUsers(userQuery: UserQuery): Promise<User[]> {
+    Object.keys(userQuery).forEach((key) => {
+      if (key !== 'role') {
+        userQuery[key] = ILike(`%${userQuery[key]}%`);
+      }
+    });
+
+    return User.find({
+      where: { ...userQuery, isActive: true },
+      order: {
+        firstName: 'ASC',
+        lastName: 'ASC',
+      },
+    });
+  }
 }

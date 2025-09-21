@@ -22,52 +22,103 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+# Backend - Nest React Admin
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This is the backend service for the Nest React Admin project, built using the [NestJS](https://nestjs.com/) framework. It provides APIs for user authentication, content management, course handling, and statistics.
 
-## Installation
+Este es el servicio backend para el proyecto Nest React Admin, construido con el framework [NestJS](https://nestjs.com/). Proporciona APIs para autenticación de usuarios, gestión de contenido, manejo de cursos y estadísticas.
+
+## Features / Características
+
+- **Authentication / Autenticación**: JWT-based authentication with role-based access control.
+  Autenticación basada en JWT con control de acceso basado en roles.
+- **Content Management / Gestión de Contenido**: APIs for managing content entities.
+  APIs para gestionar entidades de contenido.
+- **Course Management / Gestión de Cursos**: APIs for managing courses.
+  APIs para gestionar cursos.
+- **Statistics / Estadísticas**: APIs for retrieving and managing statistics.
+  APIs para recuperar y gestionar estadísticas.
+- **Swagger Documentation / Documentación Swagger**: Interactive API documentation available at `/api/docs` (in non-production environments).
+  Documentación interactiva de la API disponible en `/api/docs` (en entornos no productivos).
+- **Admin User Creation / Creación de Usuario Admin**: Automatically creates an admin user on first use if none exists.
+  Crea automáticamente un usuario administrador en el primer uso si no existe.
+
+## Project Structure / Estructura del Proyecto
+
+- **auth/**: Handles authentication and authorization.
+  Maneja la autenticación y autorización.
+- **content/**: Manages content-related entities and services.
+  Gestiona entidades y servicios relacionados con el contenido.
+- **course/**: Manages course-related entities and services.
+  Gestiona entidades y servicios relacionados con los cursos.
+- **stats/**: Handles statistics-related APIs.
+  Maneja las APIs relacionadas con estadísticas.
+- **user/**: Manages user-related entities and services.
+  Gestiona entidades y servicios relacionados con los usuarios.
+
+## Installation / Instalación
 
 ```bash
 $ npm install
 ```
 
-## Running the app
+## Environment Variables / Variables de Entorno
+
+The following environment variables are required for the application to run:
+Las siguientes variables de entorno son necesarias para que la aplicación funcione:
+
+- `PORT`: The port on which the server will run (default: 5000).
+  El puerto en el que se ejecutará el servidor (por defecto: 5000).
+- `NODE_ENV`: The environment mode (`development` or `production`).
+  El modo de entorno (`development` o `production`).
+- `COOKIE_SECRET`: Secret key for signing cookies.
+  Clave secreta para firmar cookies.
+- `CORS_ORIGINS`: Comma-separated list of allowed CORS origins.
+  Lista separada por comas de orígenes permitidos para CORS.
+- `ADMIN_USERNAME`: Default admin username.
+  Nombre de usuario administrador por defecto.
+- `ADMIN_PASSWORD`: Default admin password.
+  Contraseña de administrador por defecto.
+- `BCRYPT_ROUNDS`: Number of salt rounds for bcrypt (default: 12).
+  Número de rondas de sal para bcrypt (por defecto: 12).
+
+## Running the App / Ejecutando la Aplicación
 
 ```bash
-# development
+# development / desarrollo
 $ npm run start
 
-# watch mode
+# watch mode / modo watch
 $ npm run start:dev
 
-# production mode
+# production mode / modo producción
 $ npm run start:prod
 ```
 
-## Test
+## Testing / Pruebas
 
 ```bash
-# unit tests
+# unit tests / pruebas unitarias
 $ npm run test
 
-# e2e tests
+# e2e tests / pruebas e2e
 $ npm run test:e2e
 
-# test coverage
+# test coverage / cobertura de pruebas
 $ npm run test:cov
 ```
 
-## Support
+## Swagger Documentation / Documentación Swagger
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Swagger documentation is available at `/api/docs` when running in non-production environments.
+La documentación Swagger está disponible en `/api/docs` cuando se ejecuta en entornos no productivos.
 
-## Stay in touch
+## Admin User Creation / Creación de Usuario Admin
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+On the first run, the application will check if an admin user exists. If not, it will create one using the `ADMIN_USERNAME` and `ADMIN_PASSWORD` environment variables.
+En la primera ejecución, la aplicación verificará si existe un usuario administrador. Si no, creará uno utilizando las variables de entorno `ADMIN_USERNAME` y `ADMIN_PASSWORD`.
 
-## License
+## License / Licencia
 
-Nest is [MIT licensed](LICENSE).
+This project is [MIT licensed](LICENSE).
+Este proyecto está bajo la licencia [MIT](LICENSE).
