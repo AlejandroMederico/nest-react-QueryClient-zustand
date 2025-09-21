@@ -14,68 +14,108 @@ export class ContentService {
     courseId: string,
     createContentDto: CreateContentDto,
   ): Promise<Content> {
-    const { name, description } = createContentDto;
-    const course = await this.courseService.findById(courseId);
-    return await Content.create({
-      name,
-      description,
-      course,
-      dateCreated: new Date(),
-    }).save();
+    try {
+      const { name, description } = createContentDto;
+      const course = await this.courseService.findById(courseId);
+
+      if (!course) {
+        throw new HttpException('Course not found', HttpStatus.NOT_FOUND);
+      }
+
+      return await Content.create({
+        name,
+        description,
+        course,
+        dateCreated: new Date(),
+      }).save();
+    } catch (error) {
+      throw new HttpException(
+        `An error occurred in ContentService.save: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async findAll(contentQuery: ContentQuery): Promise<Content[]> {
-    Object.keys(contentQuery).forEach((key) => {
-      contentQuery[key] = ILike(`%${contentQuery[key]}%`);
-    });
+    try {
+      Object.keys(contentQuery).forEach((key) => {
+        contentQuery[key] = ILike(`%${contentQuery[key]}%`);
+      });
 
-    return await Content.find({
-      where: contentQuery,
-      order: {
-        name: 'ASC',
-        description: 'ASC',
-      },
-    });
+      return await Content.find({
+        where: contentQuery,
+        order: {
+          name: 'ASC',
+          description: 'ASC',
+        },
+      });
+    } catch (error) {
+      throw new HttpException(
+        `An error occurred in ContentService.findAll: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async findById(id: string): Promise<Content> {
-    const content = await Content.findOne(id);
+    try {
+      const content = await Content.findOne(id);
 
-    if (!content) {
+      if (!content) {
+        throw new HttpException(
+          `Could not find content with matching id`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      return content;
+    } catch (error) {
       throw new HttpException(
-        `Could not find content with matching id ${id}`,
-        HttpStatus.NOT_FOUND,
+        `An error occurred in ContentService.findById: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-
-    return content;
   }
 
   async findByCourseIdAndId(courseId: string, id: string): Promise<Content> {
-    const content = await Content.findOne({ where: { courseId, id } });
-    if (!content) {
+    try {
+      const content = await Content.findOne({ where: { courseId, id } });
+      if (!content) {
+        throw new HttpException(
+          `Could not find content with matching id`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      return content;
+    } catch (error) {
       throw new HttpException(
-        `Could not find content with matching id ${id}`,
-        HttpStatus.NOT_FOUND,
+        `An error occurred in ContentService.findByCourseIdAndId: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    return content;
   }
 
   async findAllByCourseId(
     courseId: string,
     contentQuery: ContentQuery,
   ): Promise<Content[]> {
-    Object.keys(contentQuery).forEach((key) => {
-      contentQuery[key] = ILike(`%${contentQuery[key]}%`);
-    });
-    return await Content.find({
-      where: { courseId, ...contentQuery },
-      order: {
-        name: 'ASC',
-        description: 'ASC',
-      },
-    });
+    try {
+      Object.keys(contentQuery).forEach((key) => {
+        contentQuery[key] = ILike(`%${contentQuery[key]}%`);
+      });
+      return await Content.find({
+        where: { courseId, ...contentQuery },
+        order: {
+          name: 'ASC',
+          description: 'ASC',
+        },
+      });
+    } catch (error) {
+      throw new HttpException(
+        `An error occurred in ContentService.findAllByCourseId: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async update(
@@ -83,17 +123,54 @@ export class ContentService {
     id: string,
     updateContentDto: UpdateContentDto,
   ): Promise<Content> {
-    const content = await this.findByCourseIdAndId(courseId, id);
-    return await Content.create({ id: content.id, ...updateContentDto }).save();
+    try {
+      const content = await this.findByCourseIdAndId(courseId, id);
+
+      if (!content) {
+        throw new HttpException(
+          `Could not find content with matching id `,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      return await Content.create({
+        id: content.id,
+        ...updateContentDto,
+      }).save();
+    } catch (error) {
+      throw new HttpException(
+        `An error occurred in ContentService.update: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async delete(courseId: string, id: string): Promise<string> {
-    const content = await this.findByCourseIdAndId(courseId, id);
-    await Content.delete(content);
-    return id;
+    try {
+      const content = await this.findByCourseIdAndId(courseId, id);
+      if (!content) {
+        throw new HttpException(
+          `Could not find content with matching id `,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      await Content.delete(content);
+      return id;
+    } catch (error) {
+      throw new HttpException(
+        `An error occurred in ContentService.delete: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async count(): Promise<number> {
-    return await Content.count();
+    try {
+      return await Content.count();
+    } catch (error) {
+      throw new HttpException(
+        `An error occurred in ContentService.count: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
