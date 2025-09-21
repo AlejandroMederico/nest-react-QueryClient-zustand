@@ -82,6 +82,11 @@ export class AuthService {
       );
     }
 
+    if (!user.isActive) {
+      response.clearCookie('refresh-token');
+      throw new HttpException('Account is disabled', HttpStatus.UNAUTHORIZED);
+    }
+
     try {
       await this.jwtService.verifyAsync(refreshToken, {
         secret: this.REFRESH_SECRET,
