@@ -1,4 +1,5 @@
 import { ValidationPipe } from '@nestjs/common';
+import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as bcrypt from 'bcrypt';
@@ -16,23 +17,15 @@ import { User } from './user/user.entity';
 const PORT = Number(process.env.PORT ?? 5000);
 const NODE_ENV = process.env.NODE_ENV ?? 'development';
 const COOKIE_SECRET = process.env.COOKIE_SECRET ?? '';
-const RAW_ORIGINS = (process.env.CORS_ORIGINS ?? '')
-  .split(',')
-  .map((o) => o.trim())
-  .filter(Boolean);
 
-/* =========================
-   Helpers “mini”
-   ========================= */
-function corsOrigin(
-  origin: string | undefined,
-  cb: (err: Error | null, ok?: boolean) => void,
-) {
-  // CLI / tools y same-origin (Swagger)
-  if (!origin || origin === `http://localhost:${PORT}`) return cb(null, true);
-  if (RAW_ORIGINS.length === 0 || RAW_ORIGINS.includes(origin))
-    return cb(null, true);
-  return cb(new Error('CORS: Origin not allowed'), false);
+function parseAllowlist(env: string | undefined): Set<string> {
+  const out = new Set<string>();
+  if (!env) return out;
+  for (const raw of env.split(',')) {
+    const v = raw.trim();
+    if (v) out.add(v);
+  }
+  return out;
 }
 
 function setupSwagger(app) {
@@ -72,16 +65,42 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
   app.setGlobalPrefix('api');
+  const isProd = process.env.NODE_ENV === 'production';
+  const allowlist = parseAllowlist(process.env.CORS_ORIGINS);
+  // En desarrollo, agrega localhost por defecto (además de CORS_ORIGINS)
+  if (!isProd) {
+    allowlist.add('http://localhost:3000');
+    allowlist.add('http://127.0.0.1:3000');
+  }
 
   // Middlewares
-  app.use(cookieParser(COOKIE_SECRET));
+  app.use(cookieParser(COOKIE_SECRET || ''));
   app.use(helmet());
-  app.enableCors({
-    origin: corsOrigin,
-    credentials: true,
+
+  // CORS
+  const corsOptions: CorsOptions = {
+    credentials: true, // si usas cookies (refresh)
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  });
+    optionsSuccessStatus: 204,
+    origin: (origin, cb) => {
+      // 1) Sin 'Origin' (curl, healthchecks, SSR, tests):
+      if (!origin) {
+        // permitir en DEV; en PROD lo podés poner en false si querés
+        return cb(null, !isProd);
+      }
+
+      // 2) Si está en la allowlist → permitir
+      if (allowlist.has(origin)) {
+        return cb(null, true);
+      }
+
+      // 3) Si no está permitido → denegar SIN lanzar error (evita 500)
+      return cb(null, false);
+    },
+  };
+
+  app.enableCors(corsOptions);
 
   // Validación global
   app.useGlobalPipes(
