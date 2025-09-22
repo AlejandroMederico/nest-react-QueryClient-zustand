@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
 import { ILike } from 'typeorm';
 
 import { CreateUserDto, UpdateUserDto } from './user.dto';
@@ -33,18 +32,19 @@ export class UserService {
 
   async findAll(userQuery: UserQuery): Promise<User[]> {
     try {
-      Object.keys(userQuery).forEach((key) => {
-        if (key !== 'role') {
-          userQuery[key] = ILike(`%${userQuery[key]}%`);
-        }
-      });
+      const where: any = {};
+
+      if (userQuery.firstName?.trim())
+        where.firstName = ILike(`%${userQuery.firstName.trim()}%`);
+      if (userQuery.lastName?.trim())
+        where.lastName = ILike(`%${userQuery.lastName.trim()}%`);
+      if (userQuery.username?.trim())
+        where.username = ILike(`%${userQuery.username.trim()}%`);
+      if (userQuery.role?.trim()) where.role = userQuery.role.trim();
 
       return await User.find({
-        where: userQuery,
-        order: {
-          firstName: 'ASC',
-          lastName: 'ASC',
-        },
+        where,
+        order: { firstName: 'ASC', lastName: 'ASC' },
       });
     } catch (error) {
       throw new HttpException(
