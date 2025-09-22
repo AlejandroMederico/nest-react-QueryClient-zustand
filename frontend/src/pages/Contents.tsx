@@ -10,7 +10,7 @@ import Modal from '../components/shared/Modal';
 import CreateContentRequest from '../models/content/CreateContentRequest';
 import contentService from '../services/ContentService';
 import courseService from '../services/CourseService';
-import useAuth from '../store/userStore';
+import useAuth from '../store/authStore';
 
 export default function Course() {
   const { id } = useParams<{ id: string }>();

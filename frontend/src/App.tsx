@@ -9,7 +9,7 @@ import {
 import { Spinner } from './components/shared/Spinner';
 import { AuthRoute, PrivateRoute } from './Route';
 import authService from './services/AuthService';
-import useAuth from './store/userStore';
+import useAuth from './store/authStore';
 
 const Contents = lazy(() => import('./pages/Contents'));
 const Courses = lazy(() => import('./pages/Courses'));

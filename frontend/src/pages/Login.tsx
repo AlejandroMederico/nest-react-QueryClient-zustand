@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom';
 
 import LoginRequest from '../models/auth/LoginRequest';
 import authService from '../services/AuthService';
-import useAuth from '../store/userStore';
+import useAuth from '../store/authStore';
 
 export default function Login() {
   const { setAuthenticatedUser } = useAuth();

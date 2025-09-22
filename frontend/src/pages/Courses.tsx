@@ -8,7 +8,7 @@ import Layout from '../components/layout';
 import Modal from '../components/shared/Modal';
 import CreateCourseRequest from '../models/course/CreateCourseRequest';
 import courseService from '../services/CourseService';
-import useAuth from '../store/userStore';
+import useAuth from '../store/authStore';
 
 export default function Courses() {
   const [name, setName] = useState('');

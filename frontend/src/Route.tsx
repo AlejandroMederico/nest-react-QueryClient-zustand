@@ -1,6 +1,6 @@
 import { Redirect, Route, RouteProps } from 'react-router';
 
-import useAuth from './store/userStore';
+import useAuth from './store/authStore';
 
 export { Route } from 'react-router';
 

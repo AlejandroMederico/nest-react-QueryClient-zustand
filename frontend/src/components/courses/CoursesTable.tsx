@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import Course from '../../models/course/Course';
 import UpdateCourseRequest from '../../models/course/UpdateCourseRequest';
 import courseService from '../../services/CourseService';
-import useAuth from '../../store/userStore';
+import useAuth from '../../store/authStore';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';

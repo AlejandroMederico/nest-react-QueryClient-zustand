@@ -3,7 +3,7 @@ import { useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
 
 import authService from '../../services/AuthService';
-import useAuth from '../../store/userStore';
+import useAuth from '../../store/authStore';
 import SidebarItem from './SidebarItem';
 
 interface SidebarProps {

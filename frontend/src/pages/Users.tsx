@@ -8,7 +8,7 @@ import Modal from '../components/shared/Modal';
 import UsersTable from '../components/users/UsersTable';
 import CreateUserRequest from '../models/user/CreateUserRequest';
 import userService from '../services/UserService';
-import useAuth from '../store/userStore';
+import useAuth from '../store/authStore';
 
 export default function Users() {
   const { authenticatedUser } = useAuth();

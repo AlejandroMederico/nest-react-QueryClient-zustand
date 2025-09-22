@@ -5,7 +5,7 @@ import { useQuery } from 'react-query';
 
 import UpdateUserRequest from '../../models/user/UpdateUserRequest';
 import userService from '../../services/UserService';
-import useAuth from '../../store/userStore';
+import useAuth from '../../store/authStore';
 
 export default function UpdateProfile() {
   const { authenticatedUser } = useAuth();
