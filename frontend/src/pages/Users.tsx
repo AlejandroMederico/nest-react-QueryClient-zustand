@@ -6,9 +6,9 @@ import { useQuery } from 'react-query';
 import Layout from '../components/layout';
 import Modal from '../components/shared/Modal';
 import UsersTable from '../components/users/UsersTable';
-import useAuth from '../hooks/useAuth';
 import CreateUserRequest from '../models/user/CreateUserRequest';
 import userService from '../services/UserService';
+import useAuth from '../store/userStore';
 
 export default function Users() {
   const { authenticatedUser } = useAuth();

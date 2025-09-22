@@ -1,7 +1,6 @@
-import { useContext } from 'react';
 import { Redirect, Route, RouteProps } from 'react-router';
 
-import { AuthenticationContext } from './context/AuthenticationContext';
+import useAuth from './store/userStore';
 
 export { Route } from 'react-router';
 
@@ -14,7 +13,7 @@ export function PrivateRoute({
   roles,
   ...rest
 }: PrivateRouteProps) {
-  const { authenticatedUser } = useContext(AuthenticationContext);
+  const { authenticatedUser } = useAuth();
 
   return (
     <Route
@@ -38,7 +37,7 @@ export function PrivateRoute({
 }
 
 export function AuthRoute({ component: Component, ...rest }) {
-  const { authenticatedUser } = useContext(AuthenticationContext);
+  const { authenticatedUser } = useAuth();
 
   return (
     <Route

@@ -7,9 +7,9 @@ import {
 } from 'react-router-dom';
 
 import { Spinner } from './components/shared/Spinner';
-import useAuth from './hooks/useAuth';
 import { AuthRoute, PrivateRoute } from './Route';
 import authService from './services/AuthService';
+import useAuth from './store/userStore';
 
 const Contents = lazy(() => import('./pages/Contents'));
 const Courses = lazy(() => import('./pages/Courses'));

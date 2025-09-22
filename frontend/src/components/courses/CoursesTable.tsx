@@ -3,10 +3,10 @@ import { AlertTriangle, Loader, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 
-import useAuth from '../../hooks/useAuth';
 import Course from '../../models/course/Course';
 import UpdateCourseRequest from '../../models/course/UpdateCourseRequest';
 import courseService from '../../services/CourseService';
+import useAuth from '../../store/userStore';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
@@ -71,7 +71,7 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
                     {new Date(dateCreated).toLocaleDateString()}
                   </TableItem>
                   <TableItem className="text-right">
-                    {['admin', 'editor'].includes(authenticatedUser.role) ? (
+                    {['admin', 'editor'].includes(authenticatedUser?.role) ? (
                       <button
                         className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
                         onClick={() => {
@@ -86,7 +86,7 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
                         Edit
                       </button>
                     ) : null}
-                    {authenticatedUser.role === 'admin' ? (
+                    {authenticatedUser?.role === 'admin' ? (
                       <button
                         className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
                         onClick={() => {

@@ -7,10 +7,10 @@ import { useParams } from 'react-router';
 import ContentsTable from '../components/content/ContentsTable';
 import Layout from '../components/layout';
 import Modal from '../components/shared/Modal';
-import useAuth from '../hooks/useAuth';
 import CreateContentRequest from '../models/content/CreateContentRequest';
 import contentService from '../services/ContentService';
 import courseService from '../services/CourseService';
+import useAuth from '../store/userStore';
 
 export default function Course() {
   const { id } = useParams<{ id: string }>();

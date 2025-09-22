@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { AlertTriangle, Loader, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 
-import useAuth from '../../hooks/useAuth';
 import Content from '../../models/content/Content';
 import UpdateContentRequest from '../../models/content/UpdateContentRequest';
 import contentService from '../../services/ContentService';
+import useAuth from '../../store/userStore';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
@@ -77,7 +77,7 @@ export default function ContentsTable({
                     {new Date(dateCreated).toLocaleDateString()}
                   </TableItem>
                   <TableItem className="text-right">
-                    {['admin', 'editor'].includes(authenticatedUser.role) ? (
+                    {['admin', 'editor'].includes(authenticatedUser?.role) ? (
                       <button
                         className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
                         onClick={() => {
@@ -92,7 +92,7 @@ export default function ContentsTable({
                         Edit
                       </button>
                     ) : null}
-                    {authenticatedUser.role === 'admin' ? (
+                    {authenticatedUser?.role === 'admin' ? (
                       <button
                         className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
                         onClick={() => {
