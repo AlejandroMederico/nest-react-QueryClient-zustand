@@ -1,51 +1,68 @@
-import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Switch } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
+import {
+  BrowserRouter as Router,
+  Redirect,
+  Route,
+  Switch,
+} from 'react-router-dom';
 
-import Spinner from './components/shared/Spinner';
+import { Spinner } from './components/shared/Spinner';
 import useAuth from './hooks/useAuth';
-import Contents from './pages/Contents';
-import Courses from './pages/Courses';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import Users from './pages/Users';
 import { AuthRoute, PrivateRoute } from './Route';
 import authService from './services/AuthService';
+
+const Contents = lazy(() => import('./pages/Contents'));
+const Courses = lazy(() => import('./pages/Courses'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Login = lazy(() => import('./pages/Login'));
+const Users = lazy(() => import('./pages/Users'));
 
 export default function App() {
   const { authenticatedUser, setAuthenticatedUser } = useAuth();
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const authenticate = async () => {
-    try {
-      const authResponse = await authService.refresh();
-      setAuthenticatedUser(authResponse.user);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoaded(true);
-    }
-  };
-
   useEffect(() => {
-    if (!authenticatedUser) {
-      authenticate();
-    } else {
-      setIsLoaded(true);
-    }
+    let isMounted = true;
+    (async () => {
+      try {
+        if (!authenticatedUser) {
+          const authResponse = await authService.refresh();
+          if (isMounted) setAuthenticatedUser(authResponse.user ?? null);
+        }
+      } catch (error) {
+        if (isMounted) setAuthenticatedUser(null);
+      } finally {
+        if (isMounted) setIsLoaded(true);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  return isLoaded ? (
-    <Router>
-      <Switch>
-        <PrivateRoute exact path="/" component={Dashboard} />
-        <PrivateRoute exact path="/users" component={Users} roles={['admin']} />
-        <PrivateRoute exact path="/courses" component={Courses} />
-        <PrivateRoute exact path="/courses/:id" component={Contents} />
+  // Spinner solo para bootstrap de autenticación
+  if (!isLoaded) return <Spinner />;
 
-        <AuthRoute exact path="/login" component={Login} />
-      </Switch>
+  return (
+    <Router>
+      <Suspense fallback={<Spinner />}>
+        <Switch>
+          <PrivateRoute exact path="/" component={Dashboard} />
+          <PrivateRoute
+            exact
+            path="/users"
+            component={Users}
+            roles={['admin']}
+          />
+          <PrivateRoute exact path="/courses" component={Courses} />
+          <PrivateRoute exact path="/courses/:id" component={Contents} />
+          <AuthRoute exact path="/login" component={Login} />
+
+          {/* catch-all: cualquier ruta no definida -> /login */}
+          <Route render={() => <Redirect to="/login" />} />
+        </Switch>
+      </Suspense>
     </Router>
-  ) : (
-    <Spinner />
   );
 }
