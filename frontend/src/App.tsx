@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
 
+import Spinner from './components/shared/Spinner';
 import useAuth from './hooks/useAuth';
 import Contents from './pages/Contents';
 import Courses from './pages/Courses';
@@ -44,5 +45,7 @@ export default function App() {
         <AuthRoute exact path="/login" component={Login} />
       </Switch>
     </Router>
-  ) : null;
+  ) : (
+    <Spinner />
+  );
 }
