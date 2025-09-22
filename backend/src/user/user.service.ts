@@ -141,12 +141,6 @@ export class UserService {
 
   async setRefreshToken(id: string, refreshToken: string): Promise<void> {
     try {
-      // Verificar la validez y expiración del token de refresco
-      const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-      if (!decoded || (decoded as any).exp * 1000 < Date.now()) {
-        throw new Error('Invalid or expired refresh token');
-      }
-
       const user = await this.findById(id);
       await User.update(user, {
         refreshToken: refreshToken ? await bcrypt.hash(refreshToken, 10) : null,
