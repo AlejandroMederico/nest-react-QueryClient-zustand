@@ -25,7 +25,9 @@ export default function Login() {
       setAuthenticatedUser(data.user);
       history.push('/');
     } catch (error) {
-      setError(error.response.data.message);
+      const message =
+        error?.response?.data?.message || 'An unexpected error occurred';
+      setError(message);
     }
   };
 
