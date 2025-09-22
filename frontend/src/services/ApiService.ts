@@ -2,10 +2,8 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 
 import authService from './AuthService';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
 const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: '/api',
   withCredentials: true,
 });
 
@@ -19,9 +17,12 @@ axiosInstance.interceptors.response.use(
       _retry?: boolean;
     };
 
-    if (!status) return Promise.reject(error);
+    // No intentes refrescar si la request original es al propio refresh o login
+    const url = (originalRequest.url || '').toString();
+    const isAuthEndpoint =
+      url.includes('/auth/refresh') || url.includes('/auth/login');
 
-    if (status === 401 && !originalRequest._retry) {
+    if (status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {

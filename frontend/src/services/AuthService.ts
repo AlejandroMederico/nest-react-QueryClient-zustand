@@ -5,7 +5,7 @@ import apiService from './ApiService';
 class AuthService {
   async login(loginRequest: LoginRequest): Promise<AuthResponse> {
     const { data } = await apiService.post<AuthResponse>(
-      '/api/auth/login',
+      '/auth/login',
       loginRequest,
     );
     apiService.defaults.headers.Authorization = `Bearer ${data.token}`;
@@ -13,15 +13,12 @@ class AuthService {
   }
 
   async logout(): Promise<void> {
-    await apiService.post('/api/auth/logout', {}, { withCredentials: true });
+    await apiService.post('/auth/logout', {}, { withCredentials: true });
     apiService.defaults.headers.Authorization = null;
   }
 
   async refresh(): Promise<AuthResponse> {
-    const { data } = await apiService.post<AuthResponse>(
-      '/api/auth/refresh',
-      {},
-    );
+    const { data } = await apiService.post<AuthResponse>('/auth/refresh', {});
     apiService.defaults.headers.Authorization = `Bearer ${data.token}`;
     return data;
   }
