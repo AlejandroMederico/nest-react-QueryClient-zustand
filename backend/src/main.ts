@@ -64,7 +64,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableShutdownHooks();
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api/v1');
   const isProd = process.env.NODE_ENV === 'production';
   const allowlist = parseAllowlist(process.env.CORS_ORIGINS);
   // En desarrollo, agrega localhost por defecto (además de CORS_ORIGINS)
@@ -120,7 +120,7 @@ async function bootstrap() {
 
   // Listen + shutdown limpio
   const server: Server = await app.listen(PORT);
-  console.log(`[Carna] ${NODE_ENV} → http://localhost:${PORT}/api`);
+  console.log(`[Carna] ${NODE_ENV} → http://localhost:${PORT}/api/v1`);
   if (NODE_ENV !== 'production') {
     console.log(`Swagger → http://localhost:${PORT}/api/docs`);
   }
