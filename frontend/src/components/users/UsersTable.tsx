@@ -94,29 +94,31 @@ export default function UsersTable({ isLoading, users }: UsersTableProps) {
                     </TableItem>
                     <TableItem>{role}</TableItem>
                     <TableItem className="text-right">
-                      <button
-                        className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
-                        onClick={() => {
-                          setSelectedUserId(id);
-                          setValue('firstName', firstName);
-                          setValue('lastName', lastName);
-                          setValue('username', username);
-                          setValue('role', role);
-                          setValue('isActive', isActive);
-                          setUpdateShow(true);
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
-                        onClick={() => {
-                          setSelectedUserId(id);
-                          setDeleteShow(true);
-                        }}
-                      >
-                        Delete
-                      </button>
+                      <div className="flex items-center gap-4 whitespace-nowrap">
+                        <button
+                          className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
+                          onClick={() => {
+                            setSelectedUserId(id);
+                            setValue('firstName', firstName);
+                            setValue('lastName', lastName);
+                            setValue('username', username);
+                            setValue('role', role);
+                            setValue('isActive', isActive);
+                            setUpdateShow(true);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="text-red-600 hover:text-red-900 focus:outline-none"
+                          onClick={() => {
+                            setSelectedUserId(id);
+                            setDeleteShow(true);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </TableItem>
                   </tr>
                 ),
