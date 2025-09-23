@@ -1,42 +1,72 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
-import { useQuery } from 'react-query';
+import { shallow } from 'zustand/shallow';
 
 import Layout from '../components/layout';
 import Modal from '../components/shared/Modal';
 import UsersTable from '../components/users/UsersTable';
 import CreateUserRequest from '../models/user/CreateUserRequest';
-import userService from '../services/UserService';
 import useAuth from '../store/authStore';
+import useUserStore from '../store/userStore';
 
 export default function Users() {
   const { authenticatedUser } = useAuth();
 
+  const [
+    filtered,
+    loading,
+    error,
+    setFilters,
+    fetchUsers,
+    addUser,
+  ] = useUserStore(
+    (s) => [
+      s.filtered,
+      s.loading,
+      s.error,
+      s.setFilters,
+      s.fetchUsers,
+      s.addUser,
+    ],
+    shallow,
+  );
+
+  // filtros UI
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
   const [role, setRole] = useState('');
 
-  const [addUserShow, setAddUserShow] = useState<boolean>(false);
-  const [error, setError] = useState<string>();
+  const [addUserShow, setAddUserShow] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery(
-    ['users', firstName, lastName, username, role],
-    async () => {
-      return (
-        await userService.findAll({
-          firstName: firstName || undefined,
-          lastName: lastName || undefined,
-          username: username || undefined,
-          role: role || undefined,
-        })
-      ).filter((user) => user.id !== authenticatedUser.id);
-    },
-    {
-      refetchInterval: 1000,
-    },
-  );
+  // 1) carga inicial (1 sola vez)
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  // 2) al cambiar inputs -> solo actualiza filtros locales (sin API)
+  const timerRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = (window.setTimeout(() => {
+      setFilters({
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+        username: username || undefined,
+        role: role || undefined,
+      });
+      timerRef.current = null;
+    }, 150) as unknown) as number;
+
+    return () => {
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [firstName, lastName, username, role, setFilters]);
 
   const {
     register,
@@ -47,12 +77,12 @@ export default function Users() {
 
   const saveUser = async (createUserRequest: CreateUserRequest) => {
     try {
-      await userService.save(createUserRequest);
+      await addUser(createUserRequest); // re-sync con backend una vez
       setAddUserShow(false);
-      setError(null);
+      setFormError(null);
       reset();
-    } catch (error) {
-      setError(error.response.data.message);
+    } catch (error: any) {
+      setFormError(error.message);
     }
   };
 
@@ -67,6 +97,7 @@ export default function Users() {
         <Plus /> Add User
       </button>
 
+      {/* Filtros */}
       <div className="table-filter mt-2">
         <div className="flex flex-row gap-5">
           <input
@@ -93,8 +124,6 @@ export default function Users() {
             onChange={(e) => setUsername(e.target.value)}
           />
           <select
-            name=""
-            id=""
             className="input w-1/2"
             value={role}
             onChange={(e) => setRole(e.target.value)}
@@ -107,7 +136,7 @@ export default function Users() {
         </div>
       </div>
 
-      <UsersTable data={data} isLoading={isLoading} />
+      <UsersTable isLoading={loading} users={filtered} />
 
       {/* Add User Modal */}
       <Modal show={addUserShow}>
@@ -117,7 +146,7 @@ export default function Users() {
             className="ml-auto focus:outline-none"
             onClick={() => {
               reset();
-              setError(null);
+              setFormError(null);
               setAddUserShow(false);
             }}
           >
@@ -181,11 +210,16 @@ export default function Users() {
               'Save'
             )}
           </button>
-          {error ? (
+          {formError ? (
+            <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
+              {formError}
+            </div>
+          ) : null}
+          {error && (
             <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
               {error}
             </div>
-          ) : null}
+          )}
         </form>
       </Modal>
     </Layout>

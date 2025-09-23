@@ -32,19 +32,18 @@ export class UserService {
 
   async findAll(userQuery: UserQuery): Promise<User[]> {
     try {
-      const where: any = {};
-
-      if (userQuery.firstName?.trim())
-        where.firstName = ILike(`%${userQuery.firstName.trim()}%`);
-      if (userQuery.lastName?.trim())
-        where.lastName = ILike(`%${userQuery.lastName.trim()}%`);
-      if (userQuery.username?.trim())
-        where.username = ILike(`%${userQuery.username.trim()}%`);
-      if (userQuery.role?.trim()) where.role = userQuery.role.trim();
+      Object.keys(userQuery).forEach((key) => {
+        if (key !== 'role') {
+          userQuery[key] = ILike(`%${userQuery[key]}%`);
+        }
+      });
 
       return await User.find({
-        where,
-        order: { firstName: 'ASC', lastName: 'ASC' },
+        where: userQuery,
+        order: {
+          firstName: 'ASC',
+          lastName: 'ASC',
+        },
       });
     } catch (error) {
       throw new HttpException(

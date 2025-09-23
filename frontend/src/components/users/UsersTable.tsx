@@ -2,24 +2,28 @@ import { useState } from 'react';
 import { AlertTriangle, Loader, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 
-import UpdateUserRequest from '../../models/user/UpdateUserRequest';
-import User from '../../models/user/User';
-import userService from '../../services/UserService';
+import type UpdateUserRequest from '../../models/user/UpdateUserRequest';
+import type User from '../../models/user/User';
+import useUserStore from '../../store/userStore';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
 
 interface UsersTableProps {
-  data: User[];
   isLoading: boolean;
+  users: User[]; // ← ahora viene filtrado desde arriba
 }
 
-export default function UsersTable({ data, isLoading }: UsersTableProps) {
-  const [deleteShow, setDeleteShow] = useState<boolean>(false);
-  const [updateShow, setUpdateShow] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+export default function UsersTable({ isLoading, users }: UsersTableProps) {
+  const [deleteShow, setDeleteShow] = useState(false);
+  const [updateShow, setUpdateShow] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>();
-  const [error, setError] = useState<string>();
+  const [error, setError] = useState<string | null>(null);
+
+  const deleteUser = useUserStore((s) => s.deleteUser);
+  const updateUser = useUserStore((s) => s.updateUser);
+  const fetchUsers = useUserStore((s) => s.fetchUsers);
 
   const {
     register,
@@ -30,35 +34,50 @@ export default function UsersTable({ data, isLoading }: UsersTableProps) {
   } = useForm<UpdateUserRequest>();
 
   const handleDelete = async () => {
+    if (!selectedUserId) return;
     try {
       setIsDeleting(true);
-      await userService.delete(selectedUserId);
+      await deleteUser(selectedUserId);
+      await fetchUsers(); // re-sync después de mutar (solo 1 llamada)
       setDeleteShow(false);
-    } catch (error) {
-      setError(error.response.data.message);
+      setError(null);
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ?? e?.message ?? 'Error deleting user',
+      );
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleUpdate = async (updateUserRequest: UpdateUserRequest) => {
+  const handleUpdate = async (payload: UpdateUserRequest) => {
+    if (!selectedUserId) return;
     try {
-      await userService.update(selectedUserId, updateUserRequest);
+      const body = Object.fromEntries(
+        Object.entries(payload).filter(
+          ([, v]) => v !== undefined && String(v).trim() !== '',
+        ),
+      ) as UpdateUserRequest;
+
+      await updateUser(selectedUserId, body);
+      await fetchUsers(); // re-sync
       setUpdateShow(false);
       reset();
       setError(null);
-    } catch (error) {
-      setError(error.response.data.message);
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ?? e?.message ?? 'Error updating user',
+      );
     }
   };
 
   return (
     <>
       <div className="table-container">
-        <Table columns={['Name', 'Username', 'Status', 'Role', 'Created']}>
+        <Table columns={['Name', 'Username', 'Status', 'Role', 'Actions']}>
           {isLoading
             ? null
-            : data.map(
+            : users.map(
                 ({ id, firstName, lastName, role, isActive, username }) => (
                   <tr key={id}>
                     <TableItem>{`${firstName} ${lastName}`}</TableItem>
@@ -80,13 +99,11 @@ export default function UsersTable({ data, isLoading }: UsersTableProps) {
                         className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
                         onClick={() => {
                           setSelectedUserId(id);
-
                           setValue('firstName', firstName);
                           setValue('lastName', lastName);
                           setValue('username', username);
                           setValue('role', role);
                           setValue('isActive', isActive);
-
                           setUpdateShow(true);
                         }}
                       >
@@ -107,12 +124,13 @@ export default function UsersTable({ data, isLoading }: UsersTableProps) {
               )}
         </Table>
 
-        {!isLoading && data.length < 1 ? (
+        {!isLoading && users.length < 1 ? (
           <div className="text-center my-5 text-gray-500">
             <h1>Empty</h1>
           </div>
         ) : null}
       </div>
+
       {/* Delete User Modal */}
       <Modal show={deleteShow}>
         <AlertTriangle size={30} className="text-red-500 mr-5 fixed" />
@@ -155,6 +173,7 @@ export default function UsersTable({ data, isLoading }: UsersTableProps) {
           </div>
         ) : null}
       </Modal>
+
       {/* Update User Modal */}
       <Modal show={updateShow}>
         <div className="flex">
@@ -187,7 +206,6 @@ export default function UsersTable({ data, isLoading }: UsersTableProps) {
               type="text"
               className="input sm:w-1/2"
               placeholder="Last Name"
-              disabled={isSubmitting}
               {...register('lastName')}
             />
           </div>
@@ -195,21 +213,15 @@ export default function UsersTable({ data, isLoading }: UsersTableProps) {
             type="text"
             className="input"
             placeholder="Username"
-            disabled={isSubmitting}
             {...register('username')}
           />
           <input
             type="password"
             className="input"
             placeholder="Password"
-            disabled={isSubmitting}
             {...register('password')}
           />
-          <select
-            className="input"
-            {...register('role')}
-            disabled={isSubmitting}
-          >
+          <select className="input" {...register('role')}>
             <option value="user">User</option>
             <option value="editor">Editor</option>
             <option value="admin">Admin</option>
