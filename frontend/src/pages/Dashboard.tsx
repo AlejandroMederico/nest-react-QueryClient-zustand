@@ -9,7 +9,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <h1 className="font-semibold text-3xl mb-5">Dashboard</h1>
+      <h1 className="font-semibold text-3xl my-3">Dashboard</h1>
       <hr />
       <div className="mt-5 flex flex-col gap-5">
         {!isLoading ? (
