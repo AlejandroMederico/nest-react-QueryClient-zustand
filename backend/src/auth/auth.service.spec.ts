@@ -32,12 +32,13 @@ describe('AuthService', () => {
       providers: [
         {
           provide: AuthService,
-          useValue: MockService,
+          useValue: MockService, // 👈 mockeamos el servicio (tu diseño actual)
         },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -45,44 +46,50 @@ describe('AuthService', () => {
   });
 
   describe('login', () => {
-    it('should get login response', async () => {
+    it('should return token and user', async () => {
       const req = mocks.createRequest();
       req.res = mocks.createResponse();
 
-      const loginResponse = await service.login(
+      const resp = await service.login(
         { username: 'test', password: 'test' },
         req.res,
       );
-      expect(loginResponse).toEqual({
+
+      expect(resp).toEqual({
         token: 'token',
-        user: {
-          username: 'test',
-        },
+        user: { username: 'test' },
       });
+      expect(MockService.login).toHaveBeenCalledWith(
+        { username: 'test', password: 'test' },
+        req.res,
+      );
     });
   });
 
   describe('logout', () => {
-    it('should get true', async () => {
+    it('should return true', async () => {
       const req = mocks.createRequest();
       req.res = mocks.createResponse();
+
       const result = await service.logout(req, req.res);
 
       expect(result).toBe(true);
+      expect(MockService.logout).toHaveBeenCalledWith(req, req.res);
     });
   });
 
   describe('refresh', () => {
-    it('should get login response', async () => {
+    it('should return token and user', async () => {
       const req = mocks.createRequest();
+      req.res = mocks.createResponse();
 
-      const loginResponse = await service.refresh('token', req.res);
-      expect(loginResponse).toEqual({
+      const resp = await service.refresh('token', req.res);
+
+      expect(resp).toEqual({
         token: 'token',
-        user: {
-          username: 'test',
-        },
+        user: { username: 'test' },
       });
+      expect(MockService.refresh).toHaveBeenCalledWith('token', req.res);
     });
   });
 });

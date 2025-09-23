@@ -1,90 +1,96 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import * as mocks from 'node-mocks-http';
+// src/auth/auth.controller.spec.ts
+import { UnauthorizedException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
 
 import { AuthController } from './auth.controller';
-import { LoginDto } from './auth.dto';
 import { AuthService } from './auth.service';
-
-const MockService = {
-  login: jest.fn().mockImplementation((loginDto: LoginDto) => {
-    return {
-      token: 'token',
-      user: {
-        username: loginDto.username,
-      },
-    };
-  }),
-  logout: jest.fn().mockReturnValue(true),
-  refresh: jest.fn().mockImplementation(() => {
-    return {
-      token: 'token',
-      user: {
-        username: 'test',
-      },
-    };
-  }),
-};
 
 describe('AuthController', () => {
   let controller: AuthController;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  const authServiceMock = {
+    login: jest.fn().mockResolvedValue({
+      accessToken: 'jwt.token.mock',
+      refreshToken: 'jwt.refresh.mock',
+      user: { id: 'u1', username: 'admin', role: 'admin' },
+    }),
+    logout: jest.fn().mockResolvedValue(true),
+    refresh: jest.fn().mockResolvedValue({
+      accessToken: 'jwt.token.mock',
+      refreshToken: 'jwt.refresh.mock',
+      user: { id: 'u1', username: 'admin', role: 'admin' },
+    }),
+  };
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [
-        {
-          provide: AuthService,
-          useValue: MockService,
-        },
-      ],
+      providers: [{ provide: AuthService, useValue: authServiceMock }],
     }).compile();
 
-    controller = module.get<AuthController>(AuthController);
+    controller = moduleRef.get(AuthController);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
+  beforeEach(() => jest.clearAllMocks());
 
   describe('login', () => {
-    it('should get login response', async () => {
-      const req = mocks.createRequest();
-      req.res = mocks.createResponse();
+    it('devuelve tokens y user (200)', async () => {
+      // muchos controllers reciben (dto, res)
+      const res: any = { cookie: jest.fn() };
 
-      const loginResponse = await controller.login(
-        { username: 'test', password: 'test' },
-        req.res,
+      const out = await controller.login(
+        { username: 'admin', password: 'secret' },
+        res,
       );
-      expect(loginResponse).toEqual({
-        token: 'token',
-        user: {
-          username: 'test',
-        },
+
+      expect(authServiceMock.login).toHaveBeenCalledWith(
+        { username: 'admin', password: 'secret' },
+        res,
+      );
+      expect(out).toMatchObject({
+        accessToken: expect.any(String),
+        user: { username: 'admin' },
       });
+    });
+
+    it('lanza 401 si credenciales inválidas', async () => {
+      const res: any = { cookie: jest.fn() };
+      authServiceMock.login.mockRejectedValueOnce(
+        new UnauthorizedException('Invalid username or password'),
+      );
+
+      await expect(
+        controller.login({ username: 'admin', password: 'wrong' }, res),
+      ).rejects.toMatchObject({ message: 'Invalid username or password' });
     });
   });
 
   describe('logout', () => {
-    it('should get true', async () => {
-      const req = mocks.createRequest();
-      req.res = mocks.createResponse();
-      const result = await controller.logout(req, req.res);
+    it('devuelve true', async () => {
+      // típicamente (req, res)
+      const req: any = {};
+      const res: any = { clearCookie: jest.fn() };
 
-      expect(result).toBe(true);
+      const ok = await controller.logout(req, res);
+
+      expect(ok).toBe(true);
+      expect(authServiceMock.logout).toHaveBeenCalledWith(req, res);
     });
   });
 
   describe('refresh', () => {
-    it('should get login response', async () => {
-      const req = mocks.createRequest();
+    it('devuelve nuevos tokens', async () => {
+      const req: any = {
+        cookies: { refreshToken: 'r.jwt' },
+        body: { refreshToken: 'r.jwt' },
+      };
+      const res: any = { cookie: jest.fn() };
 
-      const loginResponse = await controller.refresh(req, req.res);
-      expect(loginResponse).toEqual({
-        token: 'token',
-        user: {
-          username: 'test',
-        },
-      });
+      const out = await controller.refresh(req, res);
+
+      expect(authServiceMock.refresh).toHaveBeenCalledWith(undefined, res); // 👈
+      expect(authServiceMock.refresh).toHaveBeenCalledTimes(1);
+      expect(out).toHaveProperty('accessToken');
     });
   });
 });
