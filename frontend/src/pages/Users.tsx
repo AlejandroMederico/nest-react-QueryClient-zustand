@@ -9,6 +9,7 @@ import UsersTable from '../components/users/UsersTable';
 import CreateUserRequest from '../models/user/CreateUserRequest';
 import useAuth from '../store/authStore';
 import useUserStore from '../store/userStore';
+import { toErrorMessage } from '../utils/errors';
 
 export default function Users() {
   const { authenticatedUser } = useAuth();
@@ -81,8 +82,8 @@ export default function Users() {
       setAddUserShow(false);
       setFormError(null);
       reset();
-    } catch (error: any) {
-      setFormError(error.message);
+    } catch (e: unknown) {
+      setFormError(toErrorMessage(e, 'Error creating user'));
     }
   };
 

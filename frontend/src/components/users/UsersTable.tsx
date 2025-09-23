@@ -5,13 +5,14 @@ import { useForm } from 'react-hook-form';
 import type UpdateUserRequest from '../../models/user/UpdateUserRequest';
 import type User from '../../models/user/User';
 import useUserStore from '../../store/userStore';
+import { toErrorMessage } from '../../utils/errors';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
 
 interface UsersTableProps {
   isLoading: boolean;
-  users: User[]; // ← ahora viene filtrado desde arriba
+  users: User[];
 }
 
 export default function UsersTable({ isLoading, users }: UsersTableProps) {
@@ -38,7 +39,7 @@ export default function UsersTable({ isLoading, users }: UsersTableProps) {
     try {
       setIsDeleting(true);
       await deleteUser(selectedUserId);
-      await fetchUsers(); // re-sync después de mutar (solo 1 llamada)
+      await fetchUsers();
       setDeleteShow(false);
       setError(null);
     } catch (e: any) {
@@ -60,14 +61,12 @@ export default function UsersTable({ isLoading, users }: UsersTableProps) {
       ) as UpdateUserRequest;
 
       await updateUser(selectedUserId, body);
-      await fetchUsers(); // re-sync
+      await fetchUsers();
       setUpdateShow(false);
       reset();
       setError(null);
-    } catch (e: any) {
-      setError(
-        e?.response?.data?.message ?? e?.message ?? 'Error updating user',
-      );
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, 'Error deleting user'));
     }
   };
 

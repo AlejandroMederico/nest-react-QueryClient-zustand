@@ -5,6 +5,7 @@ import type UpdateUserRequest from '../models/user/UpdateUserRequest';
 import type User from '../models/user/User';
 import type UserQuery from '../models/user/UserQuery';
 import userService from '../services/UserService';
+import { toErrorMessage } from '../utils/errors';
 
 type State = {
   all: User[];
@@ -75,12 +76,12 @@ const useUserStore = create<State & Actions>((set, get) => ({
       const sorted = sortUsers(data);
       const filtered = applyLocalFilter(sorted, get().filters);
       set({ all: sorted, filtered, loading: false });
-    } catch (e: any) {
-      set({
+    } catch (e: unknown) {
+      set((s) => ({
+        ...s,
         loading: false,
-        error:
-          e?.response?.data?.message ?? e?.message ?? 'Error fetching users',
-      });
+        error: toErrorMessage(e, 'Error fetching users'),
+      }));
     }
   },
 
@@ -93,11 +94,12 @@ const useUserStore = create<State & Actions>((set, get) => ({
       }
       await userService.save(payload);
       await get().fetchUsers();
-    } catch (e: any) {
-      set({
+    } catch (e: unknown) {
+      set((s) => ({
+        ...s,
         loading: false,
-        error: e?.response?.data?.message ?? e?.message ?? 'Error adding user',
-      });
+      }));
+      throw e;
     }
   },
 
@@ -114,12 +116,12 @@ const useUserStore = create<State & Actions>((set, get) => ({
       }
       await userService.update(id, payload);
       await get().fetchUsers();
-    } catch (e: any) {
-      set({
+    } catch (e: unknown) {
+      set((s) => ({
+        ...s,
         loading: false,
-        error:
-          e?.response?.data?.message ?? e?.message ?? 'Error updating user',
-      });
+      }));
+      throw e;
     }
   },
 
@@ -132,12 +134,12 @@ const useUserStore = create<State & Actions>((set, get) => ({
     try {
       await userService.delete(id);
       await get().fetchUsers();
-    } catch (e: any) {
-      set({
+    } catch (e: unknown) {
+      set((s) => ({
+        ...s,
         loading: false,
-        error:
-          e?.response?.data?.message ?? e?.message ?? 'Error deleting user',
-      });
+      }));
+      throw e;
     }
   },
 }));

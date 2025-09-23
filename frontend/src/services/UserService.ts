@@ -1,50 +1,62 @@
+// services/UserService.ts
 import CreateUserRequest from '../models/user/CreateUserRequest';
 import UpdateUserRequest from '../models/user/UpdateUserRequest';
-import User from '../models/user/User';
 import UserQuery from '../models/user/UserQuery';
+import { toErrorMessage } from '../utils/errors';
 import apiService from './ApiService';
 
 class UserService {
-  async save(createUserRequest: CreateUserRequest): Promise<void> {
-    await apiService.post('/users', createUserRequest);
+  async findAll(query: UserQuery) {
+    try {
+      const { data } = await apiService.get('/users', { params: query });
+      return data;
+    } catch (e: unknown) {
+      const msg = toErrorMessage(e, 'Error fetching users');
+      throw Object.assign(new Error(msg), { op: 'findAll', entity: 'user' });
+    }
   }
 
-  async findAll(userQuery: UserQuery): Promise<User[]> {
-    return (
-      await apiService.get<User[]>('/users', {
-        params: userQuery,
-      })
-    ).data;
+  async findOne(id: string) {
+    try {
+      const { data } = await apiService.get(`/users/${id}`);
+      return data;
+    } catch (e: unknown) {
+      const msg = toErrorMessage(e, 'Error fetching user');
+      throw Object.assign(new Error(msg), {
+        op: 'findOne',
+        entity: 'user',
+        id,
+      });
+    }
   }
 
-  async findOne(id: string): Promise<User> {
-    return (await apiService.get<User>(`/users/${id}`)).data;
+  async save(payload: CreateUserRequest) {
+    try {
+      const { data } = await apiService.post('/users', payload);
+      return data;
+    } catch (e: unknown) {
+      const msg = toErrorMessage(e, 'Error adding user');
+      throw Object.assign(new Error(msg), { op: 'save', entity: 'user' });
+    }
   }
 
-  async update(
-    id: string,
-    updateUserRequest: UpdateUserRequest,
-  ): Promise<void> {
-    const {
-      firstName,
-      isActive,
-      lastName,
-      password,
-      role,
-      username,
-    } = updateUserRequest;
-    await apiService.put(`/users/${id}`, {
-      firstName: firstName || undefined,
-      lastName: lastName || undefined,
-      username: username || undefined,
-      role: role || undefined,
-      isActive,
-      password: password || undefined,
-    });
+  async update(id: string, payload: UpdateUserRequest) {
+    try {
+      const { data } = await apiService.put(`/users/${id}`, payload);
+      return data;
+    } catch (e: unknown) {
+      const msg = toErrorMessage(e, 'Error updating user');
+      throw Object.assign(new Error(msg), { op: 'update', entity: 'user', id });
+    }
   }
 
-  async delete(id: string): Promise<void> {
-    await apiService.delete(`/users/${id}`);
+  async delete(id: string) {
+    try {
+      await apiService.delete(`/users/${id}`);
+    } catch (e: unknown) {
+      const msg = toErrorMessage(e, 'Error deleting user');
+      throw Object.assign(new Error(msg), { op: 'delete', entity: 'user', id });
+    }
   }
 }
 
