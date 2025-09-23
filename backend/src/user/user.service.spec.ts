@@ -1,164 +1,195 @@
-import { Test, TestingModule } from '@nestjs/testing';
+// src/user/user.service.spec.ts
+import { HttpException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
 
-import { Role } from '../enums/role.enum';
-import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { User } from './user.entity'; // asegúrate que el import es correcto
 import { UserService } from './user.service';
 
-describe('UserService', () => {
+// helper: garantiza que la propiedad estática exista y sea función antes de espiar
+const ensureStatic = (klass: any, key: string) => {
+  if (typeof klass[key] !== 'function') {
+    klass[key] = () => undefined; // función dummy
+  }
+  return jest.spyOn(klass, key as any);
+};
+
+describe('UserService (sin DB, con stubs)', () => {
   let service: UserService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        {
-          provide: UserService,
-          useValue: {
-            findAll: jest.fn().mockResolvedValue([
-              {
-                id: 'test1',
-                firstName: 'test1',
-                lastName: 'test1',
-                username: 'test1',
-                isActive: true,
-                role: Role.Admin,
-              },
-              {
-                id: 'test2',
-                firstName: 'test2',
-                lastName: 'test2',
-                username: 'test2',
-                isActive: true,
-                role: Role.Admin,
-              },
-              {
-                id: 'test3',
-                firstName: 'test3',
-                lastName: 'test3',
-                username: 'test3',
-                isActive: true,
-                role: Role.Admin,
-              },
-            ]),
-            save: jest
-              .fn()
-              .mockImplementation((createUserDto: CreateUserDto) => {
-                return {
-                  id: 'testid',
-                  ...createUserDto,
-                };
-              }),
-            findById: jest.fn().mockImplementation((id: string) => {
-              return {
-                id,
-                firstName: 'test',
-                lastName: 'test',
-                password: 'test',
-                role: Role.User,
-                isActive: true,
-                username: 'test',
-              };
-            }),
-            findByUsername: jest.fn().mockImplementation((username: string) => {
-              return {
-                id: 'testid',
-                firstName: 'test',
-                lastName: 'test',
-                password: 'test',
-                role: Role.User,
-                isActive: true,
-                username,
-              };
-            }),
-            update: jest
-              .fn()
-              .mockImplementation(
-                (id: string, updateUserDto: UpdateUserDto) => {
-                  return {
-                    id,
-                    ...updateUserDto,
-                  };
-                },
-              ),
-            delete: jest.fn().mockImplementation((id: string) => id),
-            count: jest.fn().mockReturnValue(10),
-          },
-        },
-      ],
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      providers: [UserService], // Servicio REAL
     }).compile();
 
-    service = module.get<UserService>(UserService);
+    service = moduleRef.get(UserService);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.clearAllMocks();
   });
 
-  describe('saveUser', () => {
-    it('should get the same user that is created', async () => {
-      const returnValue = await service.save({
-        firstName: 'test',
-        lastName: 'test',
-        password: 'test',
-        role: Role.User,
-        username: 'test',
+  describe('save (create)', () => {
+    it('crea usuario cuando username no existe', async () => {
+      // Si save() llama internamente a service.findByUsername(..), lo stub-eamos:
+      const spyFindByUsername = jest
+        .spyOn(service as any, 'findByUsername')
+        .mockResolvedValue(null);
+
+      // User.create().save()
+      const spyCreate = ensureStatic(User as any, 'create');
+      const saveMock = jest.fn().mockResolvedValue({
+        id: 'u1',
+        username: 'alice',
+        firstName: 'Alice',
+        lastName: 'Doe',
+        role: 'user',
+        isActive: true,
       });
-      expect(returnValue.id).toBe('testid');
-      expect(returnValue.firstName).toBe('test');
-      expect(returnValue.role).toBe('user');
-    });
-  });
-
-  describe('findAllUsers', () => {
-    it('should get the list of users', async () => {
-      const users = await service.findAll({});
-      expect(typeof users).toBe('object');
-      expect(users[0].firstName).toBe('test1');
-      expect(users[1].lastName).toBe('test2');
-      expect(users[2].username).toBe('test3');
-      expect(users.length).toBe(3);
-    });
-  });
-
-  describe('findOneUser', () => {
-    it('should get a user matching id', async () => {
-      const user = await service.findById('id');
-      expect(user.id).toBe('id');
-      expect(user.firstName).toBe('test');
-    });
-  });
-
-  describe('findOneUserByUsername', () => {
-    it('should get a user matching username', async () => {
-      const user = await service.findByUsername('testusername');
-      expect(user.id).toBe('testid');
-      expect(user.firstName).toBe('test');
-      expect(user.username).toBe('testusername');
-    });
-  });
-
-  describe('updateUser', () => {
-    it('should update a user and return changed values', async () => {
-      const updatedUser = await service.update('testid', {
-        firstName: 'test',
-        role: Role.Editor,
+      spyCreate.mockReturnValue({
+        username: 'alice',
+        firstName: 'Alice',
+        lastName: 'Doe',
+        role: 'user',
+        isActive: true,
+        save: saveMock,
       });
-      expect(updatedUser.id).toBe('testid');
-      expect(updatedUser.role).toBe('editor');
-      expect(updatedUser.lastName).toBe(undefined);
+
+      const dto: any = {
+        username: 'alice',
+        password: 'Secret123!',
+        firstName: 'Alice',
+        lastName: 'Doe',
+        role: 'user',
+        isActive: true,
+      };
+
+      const out = await service.save(dto);
+
+      expect(spyFindByUsername).toHaveBeenCalledWith('alice');
+      expect(spyCreate).toHaveBeenCalledWith(dto);
+      expect(saveMock).toHaveBeenCalled();
+      expect(out).toMatchObject({ username: 'alice' });
+    });
+
+    it('cuando username ya existe, lanza HttpException (envuelto por el servicio)', async () => {
+      jest.spyOn(service as any, 'findByUsername').mockResolvedValue({
+        id: 'uX',
+        username: 'alice',
+      });
+
+      await expect(
+        service.save({ username: 'alice', password: 'x' } as any),
+      ).rejects.toBeInstanceOf(HttpException);
     });
   });
 
-  describe('deleteUser', () => {
-    it('should delete a user and return the id', async () => {
-      const id = await service.delete('testid');
-      expect(id).toBe('testid');
+  describe('findAll', () => {
+    it('devuelve lista de usuarios', async () => {
+      const spyFind = ensureStatic(User as any, 'find');
+      spyFind.mockResolvedValue([
+        { id: 'u1', username: 'alice' },
+        { id: 'u2', username: 'bob' },
+      ]);
+
+      const out = await service.findAll({} as any);
+
+      expect(spyFind).toHaveBeenCalled();
+      expect(out).toHaveLength(2);
+    });
+
+    it('si falla debajo, lanza HttpException (envuelto)', async () => {
+      const spyFind = ensureStatic(User as any, 'find');
+      spyFind.mockRejectedValue(new Error('boom'));
+
+      await expect(service.findAll({} as any)).rejects.toBeInstanceOf(
+        HttpException,
+      );
     });
   });
 
-  describe('countUsers', () => {
-    it('should return the number of users', async () => {
-      const count = await service.count();
-      expect(count).toBe(10);
+  describe('findById', () => {
+    it('devuelve un usuario por id', async () => {
+      const spyFindOne = ensureStatic(User as any, 'findOne');
+      spyFindOne.mockResolvedValue({ id: 'u1', username: 'alice' });
+
+      const out = await service.findById('u1');
+
+      expect(spyFindOne).toHaveBeenCalledWith('u1');
+      expect(out).toMatchObject({ id: 'u1' });
+    });
+
+    it('si no existe, el servicio termina lanzando HttpException (por su wrapper)', async () => {
+      const spyFindOne = ensureStatic(User as any, 'findOne');
+      spyFindOne.mockResolvedValue(null);
+
+      await expect(service.findById('missing')).rejects.toBeInstanceOf(
+        HttpException,
+      );
+    });
+  });
+
+  describe('update', () => {
+    it('actualiza usuario existente', async () => {
+      // findById interno usa findOne
+      const spyFindOne = ensureStatic(User as any, 'findOne');
+      spyFindOne.mockResolvedValueOnce({ id: 'u1', username: 'alice' });
+
+      // create({ id, ...update }).save()
+      const spyCreate = ensureStatic(User as any, 'create');
+      const saveMock = jest.fn().mockResolvedValue({
+        id: 'u1',
+        username: 'alice',
+        firstName: 'Alicia',
+      });
+      spyCreate.mockReturnValue({
+        id: 'u1',
+        firstName: 'Alicia',
+        save: saveMock,
+      });
+
+      const out = await service.update('u1', { firstName: 'Alicia' } as any);
+
+      expect(spyFindOne).toHaveBeenCalledWith('u1');
+      expect(spyCreate).toHaveBeenCalledWith({ id: 'u1', firstName: 'Alicia' });
+      expect(saveMock).toHaveBeenCalled();
+      expect(out).toMatchObject({ firstName: 'Alicia' });
+    });
+
+    it('si no existe, termina lanzando HttpException (envuelto)', async () => {
+      const spyFindOne = ensureStatic(User as any, 'findOne');
+      spyFindOne.mockResolvedValueOnce(null);
+
+      await expect(
+        service.update('missing', { firstName: 'X' } as any),
+      ).rejects.toBeInstanceOf(HttpException);
+    });
+  });
+
+  describe('delete', () => {
+    it('elimina usuario existente', async () => {
+      const spyFindOne = ensureStatic(User as any, 'findOne');
+      spyFindOne.mockResolvedValueOnce({ id: 'u1' });
+
+      const spyDelete = ensureStatic(User as any, 'delete');
+      spyDelete.mockResolvedValueOnce({ affected: 1 });
+
+      const ok = await service.delete('u1');
+
+      expect(spyFindOne).toHaveBeenCalledWith('u1');
+      expect(spyDelete).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'u1' }),
+      );
+      expect(ok).toBe('u1');
+    });
+
+    it('si no existe, termina lanzando HttpException (envuelto)', async () => {
+      const spyFindOne = ensureStatic(User as any, 'findOne');
+      spyFindOne.mockResolvedValueOnce(null);
+
+      await expect(service.delete('missing')).rejects.toBeInstanceOf(
+        HttpException,
+      );
     });
   });
 });

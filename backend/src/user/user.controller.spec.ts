@@ -21,7 +21,7 @@ const MockService = {
       lastName: 'test2',
       username: 'test2',
       isActive: true,
-      role: Role.Admin,
+      role: Role.Editor,
     },
     {
       id: 'test3',
@@ -29,16 +29,18 @@ const MockService = {
       lastName: 'test3',
       username: 'test3',
       isActive: true,
-      role: Role.Admin,
+      role: Role.User,
     },
   ]),
+
   save: jest.fn().mockImplementation((createUserDto: CreateUserDto) => {
     return {
       id: 'testid',
       ...createUserDto,
     };
   }),
-  findById: jest.fn().mockImplementation((id) => {
+
+  findById: jest.fn().mockImplementation((id: string) => {
     return {
       id,
       firstName: 'test',
@@ -49,6 +51,7 @@ const MockService = {
       username: 'test',
     };
   }),
+
   update: jest
     .fn()
     .mockImplementation((id: string, updateUserDto: UpdateUserDto) => {
@@ -57,7 +60,11 @@ const MockService = {
         ...updateUserDto,
       };
     }),
-  delete: jest.fn().mockImplementation((id: string) => id),
+
+  // El controller expone softDelete() y devuelve 204 (void)
+  softDelete: jest.fn().mockImplementation((_id: string) => {
+    console.log('MockService.softDelete called', _id);
+  }),
 };
 
 describe('UserController', () => {
@@ -92,18 +99,18 @@ describe('UserController', () => {
       });
       expect(returnValue.id).toBe('testid');
       expect(returnValue.firstName).toBe('test');
-      expect(returnValue.role).toBe('user');
+      expect(returnValue.role).toBe(Role.User); // 'user'
     });
   });
 
   describe('findAllUsers', () => {
     it('should get the list of users', async () => {
       const users = await controller.findAll({});
-      expect(typeof users).toBe('object');
+      expect(Array.isArray(users)).toBe(true);
+      expect(users.length).toBe(3);
       expect(users[0].firstName).toBe('test1');
       expect(users[1].lastName).toBe('test2');
       expect(users[2].username).toBe('test3');
-      expect(users.length).toBe(3);
     });
   });
 
@@ -112,6 +119,7 @@ describe('UserController', () => {
       const user = await controller.findOne('id');
       expect(user.id).toBe('id');
       expect(user.firstName).toBe('test');
+      expect(MockService.findById).toHaveBeenCalledWith('id');
     });
   });
 
@@ -122,15 +130,20 @@ describe('UserController', () => {
         role: Role.Editor,
       });
       expect(updatedUser.id).toBe('testid');
-      expect(updatedUser.role).toBe('editor');
-      expect(updatedUser.lastName).toBe(undefined);
+      expect(updatedUser.role).toBe(Role.Editor); // 'editor'
+      expect((updatedUser as any).lastName).toBeUndefined();
+      expect(MockService.update).toHaveBeenCalledWith('testid', {
+        firstName: 'test',
+        role: Role.Editor,
+      });
     });
   });
 
-  describe('deleteUser', () => {
-    it('should delete a user and return the id', async () => {
-      const id = await controller.delete('testid');
-      expect(id).toBe('testid');
+  describe('softDeleteUser', () => {
+    it('should soft-delete a user and return void (204)', async () => {
+      const result = await controller.softDelete('testid');
+      expect(result).toBeUndefined();
+      expect(MockService.softDelete).toHaveBeenCalledWith('testid');
     });
   });
 });

@@ -1,105 +1,84 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CreateContentDto, UpdateContentDto } from 'src/content/content.dto';
 
+import { CreateContentDto, UpdateContentDto } from '../content/content.dto';
 import { ContentService } from '../content/content.service';
 import { CourseController } from './course.controller';
 import { CreateCourseDto, UpdateCourseDto } from './course.dto';
 import { CourseService } from './course.service';
 
 const CourseMockService = {
-  save: jest.fn().mockImplementation((createCourseDto: CreateCourseDto) => {
-    return {
-      id: 'testid',
+  save: jest.fn().mockImplementation((dto: CreateCourseDto) => ({
+    id: 'testid',
+    dateCreated: new Date(),
+    ...dto,
+  })),
+  findAll: jest.fn().mockResolvedValue([
+    {
+      id: 'testid1',
+      name: 'test1',
+      description: 'test1',
       dateCreated: new Date(),
-      ...createCourseDto,
-    };
-  }),
-  findAll: jest.fn().mockImplementation(() => {
-    return [
-      {
-        id: 'testid1',
-        name: 'test1',
-        description: 'test1',
-        dateCreated: new Date(),
-      },
-      {
-        id: 'testid2',
-        name: 'test2',
-        description: 'test2',
-        dateCreated: new Date(),
-      },
-      {
-        id: 'testid3',
-        name: 'test3',
-        description: 'test3',
-        dateCreated: new Date(),
-      },
-    ];
-  }),
-  findById: jest.fn().mockImplementation((id: string) => {
-    return {
-      id,
-      name: 'test',
-      description: 'test',
+    },
+    {
+      id: 'testid2',
+      name: 'test2',
+      description: 'test2',
       dateCreated: new Date(),
-    };
-  }),
-  update: jest
-    .fn()
-    .mockImplementation((id: string, updateCourseDto: UpdateCourseDto) => {
-      return {
-        id,
-        ...updateCourseDto,
-      };
-    }),
-  delete: jest.fn().mockImplementation((id) => id),
+    },
+    {
+      id: 'testid3',
+      name: 'test3',
+      description: 'test3',
+      dateCreated: new Date(),
+    },
+  ]),
+  findById: jest.fn().mockImplementation((id: string) => ({
+    id,
+    name: 'test',
+    description: 'test',
+    dateCreated: new Date(),
+  })),
+  update: jest.fn().mockImplementation((id: string, dto: UpdateCourseDto) => ({
+    id,
+    ...dto,
+  })),
+  delete: jest.fn().mockImplementation((id: string) => id),
 };
 
 const ContentMockService = {
   save: jest
     .fn()
-    .mockImplementation((id: string, createContentDto: CreateContentDto) => {
-      return {
-        id: 'testid',
-        dateCreated: new Date(),
-        ...createContentDto,
-      };
-    }),
-  findAllByCourseId: jest.fn().mockImplementation((id: string) => {
-    return [
-      {
-        id: 'testid1',
-        name: 'test1',
-        description: 'test1',
-        dateCreated: new Date(),
-      },
-      {
-        id: 'testid2',
-        name: 'test2',
-        description: 'test2',
-        dateCreated: new Date(),
-      },
-      {
-        id: 'testid3',
-        name: 'test3',
-        description: 'test3',
-        dateCreated: new Date(),
-      },
-    ];
-  }),
+    .mockImplementation((courseId: string, dto: CreateContentDto) => ({
+      id: 'testcontentid',
+      dateCreated: new Date(),
+      courseId,
+      ...dto,
+    })),
+  findAllByCourseId: jest.fn().mockImplementation(() => [
+    {
+      id: 'testcontentid1',
+      name: 'c1',
+      description: 'd1',
+      dateCreated: new Date(),
+    },
+    {
+      id: 'testcontentid2',
+      name: 'c2',
+      description: 'd2',
+      dateCreated: new Date(),
+    },
+  ]),
   update: jest
     .fn()
     .mockImplementation(
-      (id: string, contentId: string, updateContentDto: UpdateContentDto) => {
-        return {
-          id: contentId,
-          ...updateContentDto,
-        };
-      },
+      (_courseId: string, contentId: string, dto: UpdateContentDto) => ({
+        id: contentId,
+        ...dto,
+      }),
     ),
   delete: jest
     .fn()
-    .mockImplementation((id: string, contentId: string) => contentId),
+    .mockImplementation((_courseId: string, contentId: string) => contentId),
 };
 
 describe('CourseController', () => {
@@ -109,18 +88,13 @@ describe('CourseController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CourseController],
       providers: [
-        {
-          provide: CourseService,
-          useValue: CourseMockService,
-        },
-        {
-          provide: ContentService,
-          useValue: ContentMockService,
-        },
+        { provide: CourseService, useValue: CourseMockService },
+        { provide: ContentService, useValue: ContentMockService },
       ],
     }).compile();
 
     controller = module.get<CourseController>(CourseController);
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -128,139 +102,116 @@ describe('CourseController', () => {
   });
 
   describe('saveCourse', () => {
-    it('should get the created course ', async () => {
-      const created = await controller.save({
-        name: 'test',
-        description: 'test',
+    it('crea curso y retorna entidad', async () => {
+      const spyDate = jest.spyOn(global, 'Date');
+      const res = await controller.save({ name: 'N', description: 'D' });
+      const date = spyDate.mock.instances[0];
+
+      expect(CourseMockService.save).toHaveBeenCalledWith({
+        name: 'N',
+        description: 'D',
       });
-      expect(created.id).toBe('testid');
-      expect(created.name).toBe('test');
-      expect(created.description).toBe('test');
+      expect(res).toEqual({
+        id: 'testid',
+        dateCreated: date,
+        name: 'N',
+        description: 'D',
+      });
     });
   });
 
   describe('findAllCourses', () => {
-    it('should get the array of courses ', async () => {
-      const courses = await controller.findAll({});
-      expect(courses[0].id).toBe('testid1');
-      expect(courses[1].name).toBe('test2');
-      expect(courses[2].description).toBe('test3');
+    it('retorna lista de cursos', async () => {
+      const list = await controller.findAll({});
+      expect(Array.isArray(list)).toBe(true);
+      expect(list[0].id).toBe('testid1');
+      expect(list[1].name).toBe('test2');
+      expect(list[2].description).toBe('test3');
     });
   });
 
-  describe('findCourseById', () => {
-    it('should get the course with matching id ', async () => {
-      const spy = jest.spyOn(global, 'Date');
-      const course = await controller.findOne('testid');
-      const date = spy.mock.instances[0];
-
-      expect(course).toEqual({
-        id: 'testid',
-        name: 'test',
-        description: 'test',
-        dateCreated: date,
-      });
+  describe('findOneCourse', () => {
+    it('retorna curso por id', async () => {
+      const res = await controller.findOne('idX');
+      expect(CourseMockService.findById).toHaveBeenCalledWith('idX');
+      expect(res.id).toBe('idX');
+      expect(res.name).toBe('test');
     });
   });
 
   describe('updateCourse', () => {
-    it('should update a course and return changed values', async () => {
-      const updatedCourse = await controller.update('testid', {
-        name: 'test',
-        description: 'test',
+    it('actualiza curso y retorna cambios', async () => {
+      const res = await controller.update('cid', { name: 'N2' });
+      expect(CourseMockService.update).toHaveBeenCalledWith('cid', {
+        name: 'N2',
       });
-
-      expect(updatedCourse).toEqual({
-        id: 'testid',
-        name: 'test',
-        description: 'test',
-      });
-
-      const updatedCourse2 = await controller.update('testid2', {
-        name: 'test2',
-      });
-
-      expect(updatedCourse2).toEqual({
-        id: 'testid2',
-        name: 'test2',
-      });
+      expect(res).toEqual({ id: 'cid', name: 'N2' });
     });
   });
 
   describe('deleteCourse', () => {
-    it('should delete a course and return the id', async () => {
-      const id = await controller.delete('testid');
-      expect(id).toBe('testid');
+    it('elimina curso y retorna el id', async () => {
+      const res = await controller.delete('cid');
+      expect(CourseMockService.delete).toHaveBeenCalledWith('cid');
+      expect(res).toBe('cid');
     });
   });
 
-  describe('saveContent', () => {
-    it('should get the saved content', async () => {
-      const spy = jest.spyOn(global, 'Date');
-      const content = await controller.saveContent('testcourseid', {
-        name: 'test',
-        description: 'test',
-      });
-      const date = spy.mock.instances[0];
+  // ----- contents nested -----
 
-      expect(content).toEqual({
-        id: 'testid',
-        name: 'test',
-        description: 'test',
+  describe('saveContent', () => {
+    it('crea contenido para un curso', async () => {
+      const spyDate = jest.spyOn(global, 'Date');
+      const res = await controller.saveContent('cid', {
+        name: 'c1',
+        description: 'd1',
+      });
+      const date = spyDate.mock.instances[0];
+
+      expect(ContentMockService.save).toHaveBeenCalledWith('cid', {
+        name: 'c1',
+        description: 'd1',
+      });
+      expect(res).toEqual({
+        id: 'testcontentid',
         dateCreated: date,
+        courseId: 'cid',
+        name: 'c1',
+        description: 'd1',
       });
     });
   });
 
   describe('findAllContentsByCourseId', () => {
-    it('should get the array of contents', async () => {
-      const contents = await controller.findAllContentsByCourseId(
-        'testcourseid',
+    it('lista contenidos del curso', async () => {
+      const res = await controller.findAllContentsByCourseId('cid', {});
+      expect(ContentMockService.findAllByCourseId).toHaveBeenCalledWith(
+        'cid',
         {},
       );
-
-      expect(contents[0].id).toBe('testid1');
-      expect(contents[1].name).toBe('test2');
-      expect(contents[2].description).toBe('test3');
+      expect(res).toHaveLength(2);
+      expect(res[0].id).toBe('testcontentid1');
+      expect(res[1].name).toBe('c2');
     });
   });
 
   describe('updateContent', () => {
-    it('should update a content and return changed values', async () => {
-      const updatedContent = await controller.updateContent(
-        'testid',
-        'testcontentid',
-        {
-          name: 'test',
-          description: 'test',
-        },
-      );
-
-      expect(updatedContent).toEqual({
-        id: 'testcontentid',
-        name: 'test',
-        description: 'test',
+    it('actualiza contenido y retorna cambios', async () => {
+      const res = await controller.updateContent('cid', 'ctid', {
+        description: 'Dx',
       });
-
-      const updatedContent2 = await controller.updateContent(
-        'testid',
-        'testcontentid2',
-        {
-          description: 'test',
-        },
-      );
-
-      expect(updatedContent2).toEqual({
-        id: 'testcontentid2',
-        description: 'test',
+      expect(ContentMockService.update).toHaveBeenCalledWith('cid', 'ctid', {
+        description: 'Dx',
       });
+      expect(res).toEqual({ id: 'ctid', description: 'Dx' });
     });
   });
 
   describe('deleteContent', () => {
-    it('should delete a content and return the id', async () => {
-      const id = await controller.deleteContent('testid', 'testcontentid');
-      expect(id).toBe('testcontentid');
+    it('elimina contenido y retorna id', async () => {
+      const res = await controller.deleteContent('cid', 'ctid');
+      expect(ContentMockService.delete).toHaveBeenCalledWith('cid', 'ctid');
+      expect(res).toBe('ctid');
     });
   });
 });

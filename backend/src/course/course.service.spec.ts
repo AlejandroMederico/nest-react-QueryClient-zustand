@@ -1,148 +1,159 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { CreateCourseDto, UpdateCourseDto } from './course.dto';
+import { Course } from './course.entity';
 import { CourseService } from './course.service';
-
-const MockService = {
-  save: jest.fn().mockImplementation((createCourseDto: CreateCourseDto) => {
-    return {
-      id: 'testid',
-      dateCreated: new Date(),
-      ...createCourseDto,
-    };
-  }),
-  findAll: jest.fn().mockImplementation(() => {
-    return [
-      {
-        id: 'testid1',
-        name: 'test1',
-        description: 'test1',
-        dateCreated: new Date(),
-      },
-      {
-        id: 'testid2',
-        name: 'test2',
-        description: 'test2',
-        dateCreated: new Date(),
-      },
-      {
-        id: 'testid3',
-        name: 'test3',
-        description: 'test3',
-        dateCreated: new Date(),
-      },
-    ];
-  }),
-  findById: jest.fn().mockImplementation((id: string) => {
-    return {
-      id,
-      name: 'test',
-      description: 'test',
-      dateCreated: new Date(),
-    };
-  }),
-  update: jest
-    .fn()
-    .mockImplementation((id: string, updateCourseDto: UpdateCourseDto) => {
-      return {
-        id,
-        ...updateCourseDto,
-      };
-    }),
-  delete: jest.fn().mockImplementation((id) => id),
-  count: jest.fn().mockReturnValue(10),
-};
 
 describe('CourseService', () => {
   let service: CourseService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        {
-          provide: CourseService,
-          useValue: MockService,
-        },
-      ],
+      providers: [CourseService],
     }).compile();
 
     service = module.get<CourseService>(CourseService);
+    jest.restoreAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  describe('saveCourse', () => {
-    it('should get the created course ', async () => {
-      const created = await service.save({
-        name: 'test',
-        description: 'test',
+  describe('save', () => {
+    it('crea y guarda un curso', async () => {
+      const dto: CreateCourseDto = { name: 'N1', description: 'D1' };
+
+      // mock Course.create().save()
+      const saveMock = jest.fn().mockResolvedValue({
+        id: 'testid',
+        name: 'N1',
+        description: 'D1',
+        dateCreated: new Date(),
       });
+      const createSpy = jest
+        .spyOn(Course as any, 'create')
+        .mockReturnValue({ save: saveMock });
+
+      const created = await service.save(dto);
+
+      expect(createSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'N1', description: 'D1' }),
+      );
+      expect(saveMock).toHaveBeenCalledTimes(1);
       expect(created.id).toBe('testid');
-      expect(created.name).toBe('test');
-      expect(created.description).toBe('test');
+      expect(created.name).toBe('N1');
     });
   });
 
-  describe('findAllCourses', () => {
-    it('should get the array of courses ', async () => {
-      const courses = await service.findAll({});
-      expect(courses[0].id).toBe('testid1');
-      expect(courses[1].name).toBe('test2');
-      expect(courses[2].description).toBe('test3');
+  describe('findAll', () => {
+    it('devuelve lista de cursos', async () => {
+      const findSpy = jest.spyOn(Course as any, 'find').mockResolvedValue([
+        {
+          id: 'testid1',
+          name: 'test1',
+          description: 'test1',
+          dateCreated: new Date(),
+        },
+        {
+          id: 'testid2',
+          name: 'test2',
+          description: 'test2',
+          dateCreated: new Date(),
+        },
+        {
+          id: 'testid3',
+          name: 'test3',
+          description: 'test3',
+          dateCreated: new Date(),
+        },
+      ]);
+
+      const res = await service.findAll({});
+      expect(findSpy).toHaveBeenCalledTimes(1);
+      expect(res).toHaveLength(3);
+      expect(res[0].id).toBe('testid1');
+      expect(res[1].name).toBe('test2');
+      expect(res[2].description).toBe('test3');
     });
   });
 
-  describe('findCourseById', () => {
-    it('should get the course with matching id ', async () => {
-      const spy = jest.spyOn(global, 'Date');
+  describe('findById', () => {
+    it('devuelve curso por id', async () => {
+      const spyDate = jest.spyOn(global, 'Date');
+      const oneSpy = jest
+        .spyOn(Course as any, 'findOne')
+        .mockResolvedValueOnce({
+          id: 'testid',
+          name: 'test',
+          description: 'test',
+          dateCreated: spyDate.mock.instances[0],
+        });
+
       const course = await service.findById('testid');
-      const date = spy.mock.instances[0];
-
+      expect(oneSpy).toHaveBeenCalledWith('testid');
       expect(course).toEqual({
         id: 'testid',
         name: 'test',
         description: 'test',
-        dateCreated: date,
+        dateCreated: spyDate.mock.instances[0],
       });
     });
   });
 
-  describe('updateCourse', () => {
-    it('should update a course and return changed values', async () => {
-      const updatedCourse = await service.update('testid', {
-        name: 'test',
-        description: 'test',
-      });
+  describe('update', () => {
+    it('actualiza curso y retorna cambios', async () => {
+      const dto: UpdateCourseDto = { name: 'NN', description: 'DD' };
 
-      expect(updatedCourse).toEqual({
+      // 🔧 IMPORTANTE: el service llama this.findById(id) → lo stubbeamos
+      jest
+        .spyOn(service, 'findById')
+        .mockResolvedValueOnce({ id: 'testid' } as any);
+
+      // luego hace Course.create({ id, ...dto }).save()
+      const saveMock = jest.fn().mockResolvedValue({
         id: 'testid',
-        name: 'test',
-        description: 'test',
+        ...dto,
       });
+      const createSpy = jest
+        .spyOn(Course as any, 'create')
+        .mockReturnValue({ save: saveMock });
 
-      const updatedCourse2 = await service.update('testid2', {
-        name: 'test2',
-      });
+      const updated = await service.update('testid', dto);
 
-      expect(updatedCourse2).toEqual({
-        id: 'testid2',
-        name: 'test2',
-      });
+      expect(service.findById).toHaveBeenCalledWith('testid');
+      expect(createSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'testid', ...dto }),
+      );
+      expect(updated).toEqual({ id: 'testid', ...dto });
     });
   });
 
-  describe('deleteCourse', () => {
-    it('should delete a course and return the id', async () => {
+  describe('delete', () => {
+    it('elimina curso y retorna el id', async () => {
+      // El service valida existencia
+      jest
+        .spyOn(service, 'findById')
+        .mockResolvedValueOnce({ id: 'testid' } as any);
+
+      const delSpy = jest
+        .spyOn(Course as any, 'delete')
+        .mockResolvedValueOnce({ affected: 1 });
+
       const id = await service.delete('testid');
+
+      expect(service.findById).toHaveBeenCalledWith('testid');
+      expect(delSpy).toHaveBeenCalledWith({ id: 'testid' });
       expect(id).toBe('testid');
     });
   });
 
   describe('count', () => {
-    it('should get number of courses', async () => {
+    it('retorna cantidad de cursos', async () => {
+      const countSpy = jest.spyOn(Course as any, 'count').mockResolvedValue(10);
       const count = await service.count();
+      expect(countSpy).toHaveBeenCalledTimes(1);
       expect(count).toBe(10);
     });
   });
