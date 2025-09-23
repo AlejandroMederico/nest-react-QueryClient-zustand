@@ -7,45 +7,43 @@ import type UserQuery from '../models/user/UserQuery';
 import userService from '../services/UserService';
 
 type State = {
-  all: User[]; // fuente de verdad local
-  filtered: User[]; // resultado del filtro en memoria
+  all: User[];
+  filtered: User[];
   loading: boolean;
   error: string | null;
-  filters: UserQuery; // filtros actuales (front)
+  filters: UserQuery;
 };
 
 type Actions = {
-  // seteo de filtros (NO pega a la API)
   setFilters: (partial: UserQuery) => void;
-
-  // carga/recarga desde backend (solo cuando hace falta)
   fetchUsers: () => Promise<void>;
-
-  // mutaciones (y luego re-sync 1 vez)
   addUser: (payload: CreateUserRequest) => Promise<void>;
   updateUser: (id: string, payload: UpdateUserRequest) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
 };
 
-const applyLocalFilter = (items: User[], f: UserQuery): User[] => {
-  const first = (f.firstName ?? '').trim().toLowerCase();
-  const last = (f.lastName ?? '').trim().toLowerCase();
-  const usern = (f.username ?? '').trim().toLowerCase();
-  const role = (f.role ?? '').trim().toLowerCase();
+const applyLocalFilter = (items: User[], query: UserQuery): User[] => {
+  const first = (query.firstName ?? '').trim().toLowerCase();
+  const last = (query.lastName ?? '').trim().toLowerCase();
+  const usern = (query.username ?? '').trim().toLowerCase();
+  const role = (query.role ?? '').trim().toLowerCase();
 
-  return items.filter((u) => {
+  return items.filter((_user) => {
     const okFirst = first
-      ? `${u.firstName}`.toLowerCase().includes(first)
+      ? `${_user.firstName}`.toLowerCase().includes(first)
       : true;
-    const okLast = last ? `${u.lastName}`.toLowerCase().includes(last) : true;
+    const okLast = last
+      ? `${_user.lastName}`.toLowerCase().includes(last)
+      : true;
     const okUsern = usern
-      ? `${u.username}`.toLowerCase().includes(usern)
+      ? `${_user.username}`.toLowerCase().includes(usern)
       : true;
-    const okRole = role ? `${u.role}`.toLowerCase() === role : true;
+    const okRole = role ? `${_user.role}`.toLowerCase() === role : true;
     return okFirst && okLast && okUsern && okRole;
   });
 };
 
+// Ordena por firstName, lastName
 const sortUsers = (items: User[]) =>
   items
     .slice()
@@ -63,9 +61,9 @@ const useUserStore = create<State & Actions>((set, get) => ({
   filters: {},
 
   setFilters(partial) {
-    set((s) => {
-      const nextFilters = { ...s.filters, ...partial };
-      const nextFiltered = sortUsers(applyLocalFilter(s.all, nextFilters));
+    set((_state) => {
+      const nextFilters = { ..._state.filters, ...partial };
+      const nextFiltered = sortUsers(applyLocalFilter(_state.all, nextFilters));
       return { filters: nextFilters, filtered: nextFiltered };
     });
   },
@@ -73,7 +71,7 @@ const useUserStore = create<State & Actions>((set, get) => ({
   async fetchUsers() {
     set({ loading: true, error: null });
     try {
-      const data = await userService.findAll({}); // trae todo 1 vez
+      const data = await userService.findAll({});
       const sorted = sortUsers(data);
       const filtered = applyLocalFilter(sorted, get().filters);
       set({ all: sorted, filtered, loading: false });
@@ -87,18 +85,60 @@ const useUserStore = create<State & Actions>((set, get) => ({
   },
 
   async addUser(payload) {
-    await userService.save(payload);
-    await get().fetchUsers(); // re-sync lista local
+    set({ loading: true, error: null });
+    try {
+      if (Object.keys(payload).length === 0) {
+        set({ loading: false, error: 'No fields to add' });
+        return;
+      }
+      await userService.save(payload);
+      await get().fetchUsers();
+    } catch (e: any) {
+      set({
+        loading: false,
+        error: e?.response?.data?.message ?? e?.message ?? 'Error adding user',
+      });
+    }
   },
 
   async updateUser(id, payload) {
-    await userService.update(id, payload);
-    await get().fetchUsers();
+    set({ loading: true, error: null });
+    try {
+      if (!id) {
+        set({ loading: false, error: 'User ID is required' });
+        return;
+      }
+      if (Object.keys(payload).length === 0) {
+        set({ loading: false, error: 'No fields to update' });
+        return;
+      }
+      await userService.update(id, payload);
+      await get().fetchUsers();
+    } catch (e: any) {
+      set({
+        loading: false,
+        error:
+          e?.response?.data?.message ?? e?.message ?? 'Error updating user',
+      });
+    }
   },
 
   async deleteUser(id) {
-    await userService.delete(id);
-    await get().fetchUsers();
+    set({ loading: true, error: null });
+    if (!id) {
+      set({ loading: false, error: 'User ID is required' });
+      return;
+    }
+    try {
+      await userService.delete(id);
+      await get().fetchUsers();
+    } catch (e: any) {
+      set({
+        loading: false,
+        error:
+          e?.response?.data?.message ?? e?.message ?? 'Error deleting user',
+      });
+    }
   },
 }));
 
