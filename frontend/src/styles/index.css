@@ -44,7 +44,7 @@
     @apply flex flex-col lg:flex-row gap-5 rounded-lg p-3 shadow overflow-x-auto border;
   }
   .sidebar {
-    @apply fixed h-full w-72 p-5 shadow flex flex-col transform -translate-x-72 bg-white lg:translate-x-0 transition-transform;
+    @apply fixed h-full w-72 p-5 shadow flex flex-col transform -translate-x-72 lg:translate-x-0 transition-transform;
   }
   .sidebar.show {
     @apply translate-x-0 !important;

@@ -3,6 +3,7 @@ import { Loader } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { useHistory } from 'react-router-dom';
 
+import logo from '../assets/favicon.png';
 import LoginRequest from '../models/auth/LoginRequest';
 import authService from '../services/AuthService';
 import useAuth from '../store/authStore';
@@ -34,6 +35,7 @@ export default function Login() {
   return (
     <div className="h-full flex justify-center items-center">
       <div className="card shadow">
+        <img src={logo} alt="Logo" className="w-24 h-24 mx-auto mb-3" />
         <h1 className="mb-3 text-center font-semibold text-4xl">Login</h1>
         <hr />
         <form
