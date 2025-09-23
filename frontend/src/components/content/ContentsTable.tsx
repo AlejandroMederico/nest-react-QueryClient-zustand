@@ -2,31 +2,36 @@ import { useState } from 'react';
 import { AlertTriangle, Loader, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 
-import Content from '../../models/content/Content';
-import UpdateContentRequest from '../../models/content/UpdateContentRequest';
-import contentService from '../../services/ContentService';
+import type Content from '../../models/content/Content';
+import type UpdateContentRequest from '../../models/content/UpdateContentRequest';
 import useAuth from '../../store/authStore';
+import useContentStore from '../../store/contentStore';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
 
 interface ContentsTableProps {
-  data: Content[];
+  contents: Content[];
   courseId: string;
   isLoading: boolean;
 }
 
 export default function ContentsTable({
-  data,
+  contents,
   isLoading,
   courseId,
 }: ContentsTableProps) {
   const { authenticatedUser } = useAuth();
-  const [deleteShow, setDeleteShow] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  const deleteContent = useContentStore((s) => s.deleteContent);
+  const updateContent = useContentStore((s) => s.updateContent);
+  const fetchContents = useContentStore((s) => s.fetchContents);
+
+  const [deleteShow, setDeleteShow] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedContentId, setSelectedContentId] = useState<string>();
-  const [error, setError] = useState<string>();
-  const [updateShow, setUpdateShow] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [updateShow, setUpdateShow] = useState(false);
 
   const {
     register,
@@ -37,39 +42,50 @@ export default function ContentsTable({
   } = useForm<UpdateContentRequest>();
 
   const handleDelete = async () => {
+    if (!selectedContentId) return;
     try {
       setIsDeleting(true);
-      await contentService.delete(courseId, selectedContentId);
+      await deleteContent(courseId, selectedContentId);
+      await fetchContents(courseId); // re-sync una vez
       setDeleteShow(false);
-    } catch (error) {
-      setError(error.response.data.message);
+      setError(null);
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ?? e?.message ?? 'Error deleting content',
+      );
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleUpdate = async (updateContentRequest: UpdateContentRequest) => {
+  const handleUpdate = async (payload: UpdateContentRequest) => {
+    if (!selectedContentId) return;
     try {
-      await contentService.update(
-        courseId,
-        selectedContentId,
-        updateContentRequest,
-      );
+      const body = Object.fromEntries(
+        Object.entries(payload).filter(
+          ([, v]) => v !== undefined && String(v).trim() !== '',
+        ),
+      ) as UpdateContentRequest;
+
+      await updateContent(courseId, selectedContentId, body);
+      await fetchContents(courseId); // re-sync
       setUpdateShow(false);
       reset();
       setError(null);
-    } catch (error) {
-      setError(error.response.data.message);
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ?? e?.message ?? 'Error updating content',
+      );
     }
   };
 
   return (
     <>
       <div className="table-container">
-        <Table columns={['Name', 'Description', 'Created']}>
+        <Table columns={['Name', 'Description', 'Created', 'Actions']}>
           {isLoading
             ? null
-            : data.map(({ id, name, description, dateCreated }) => (
+            : contents.map(({ id, name, description, dateCreated }) => (
                 <tr key={id}>
                   <TableItem>{name}</TableItem>
                   <TableItem>{description}</TableItem>
@@ -82,10 +98,8 @@ export default function ContentsTable({
                         className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
                         onClick={() => {
                           setSelectedContentId(id);
-
                           setValue('name', name);
                           setValue('description', description);
-
                           setUpdateShow(true);
                         }}
                       >
@@ -107,7 +121,7 @@ export default function ContentsTable({
                 </tr>
               ))}
         </Table>
-        {!isLoading && data.length < 1 ? (
+        {!isLoading && contents.length < 1 ? (
           <div className="text-center my-5 text-gray-500">
             <h1>Empty</h1>
           </div>
@@ -191,7 +205,6 @@ export default function ContentsTable({
               className="input"
               placeholder="Description"
               required
-              disabled={isSubmitting}
               {...register('description')}
             />
             <button className="btn" disabled={isSubmitting}>

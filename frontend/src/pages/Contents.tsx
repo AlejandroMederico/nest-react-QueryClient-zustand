@@ -1,27 +1,83 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
-import { useQuery } from 'react-query';
 import { useParams } from 'react-router';
+import { shallow } from 'zustand/shallow';
 
 import ContentsTable from '../components/content/ContentsTable';
 import Layout from '../components/layout';
 import Modal from '../components/shared/Modal';
-import CreateContentRequest from '../models/content/CreateContentRequest';
-import contentService from '../services/ContentService';
+import type CreateContentRequest from '../models/content/CreateContentRequest';
 import courseService from '../services/CourseService';
 import useAuth from '../store/authStore';
+import useContentStore from '../store/contentStore';
 
 export default function Course() {
-  const { id } = useParams<{ id: string }>();
+  const { id: courseId } = useParams<{ id: string }>();
   const { authenticatedUser } = useAuth();
 
+  const [bucket, setFilters, fetchContents, addContent] = useContentStore(
+    (s) => [
+      s.byCourse[courseId ?? ''],
+      s.setFilters,
+      s.fetchContents,
+      s.addContent,
+    ],
+    shallow,
+  );
+
+  const loading = bucket?.loading ?? false;
+  const error = bucket?.error ?? null;
+  const contents = bucket?.filtered ?? [];
+
+  // Para el título (nombre del curso): dejamos el fetch directo
+  const [courseName, setCourseName] = useState('');
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!courseId) return;
+      const c = await courseService.findOne(courseId);
+      if (mounted) setCourseName(c?.name ?? '');
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [courseId]);
+
+  // carga inicial
+  useEffect(() => {
+    if (!courseId) return;
+    fetchContents(courseId);
+  }, [courseId, fetchContents]);
+
+  // filtros UI locales
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [addContentShow, setAddContentShow] = useState<boolean>(false);
-  const [error, setError] = useState<string>();
 
-  const userQuery = useQuery('user', async () => courseService.findOne(id));
+  // debounce corto para aplicar filtros al store (sin API)
+  const timerRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!courseId) return;
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = (window.setTimeout(() => {
+      setFilters(courseId, {
+        name: name || undefined,
+        description: description || undefined,
+      });
+      timerRef.current = null;
+    }, 150) as unknown) as number;
+
+    return () => {
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [courseId, name, description, setFilters]);
+
+  // modal crear
+  const [addContentShow, setAddContentShow] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const {
     register,
@@ -30,33 +86,24 @@ export default function Course() {
     reset,
   } = useForm<CreateContentRequest>();
 
-  const { data, isLoading } = useQuery(
-    [`contents-${id}`, name, description],
-    async () =>
-      contentService.findAll(id, {
-        name: name || undefined,
-        description: description || undefined,
-      }),
-    {
-      refetchInterval: 1000,
-    },
-  );
-
-  const saveCourse = async (createContentRequest: CreateContentRequest) => {
+  const saveContent = async (req: CreateContentRequest) => {
     try {
-      await contentService.save(id, createContentRequest);
+      if (!courseId) return;
+      await addContent(courseId, req); // re-sync luego de crear
       setAddContentShow(false);
+      setFormError(null);
       reset();
-      setError(null);
-    } catch (error) {
-      setError(error.response.data.message);
+    } catch (e: any) {
+      setFormError(
+        e?.response?.data?.message ?? e?.message ?? 'Error creating content',
+      );
     }
   };
 
   return (
     <Layout>
       <h1 className="font-semibold text-3xl mb-5">
-        {!userQuery.isLoading ? `${userQuery.data.name} Contents` : ''}
+        {courseName ? `${courseName} Contents` : ''}
       </h1>
       <hr />
       {authenticatedUser.role !== 'user' ? (
@@ -87,9 +134,13 @@ export default function Course() {
         </div>
       </div>
 
-      <ContentsTable data={data} isLoading={isLoading} courseId={id} />
+      <ContentsTable
+        contents={contents}
+        isLoading={loading}
+        courseId={courseId!}
+      />
 
-      {/* Add User Modal */}
+      {/* Add Content Modal */}
       <Modal show={addContentShow}>
         <div className="flex">
           <h1 className="font-semibold mb-3">Add Content</h1>
@@ -107,7 +158,7 @@ export default function Course() {
 
         <form
           className="flex flex-col gap-5 mt-5"
-          onSubmit={handleSubmit(saveCourse)}
+          onSubmit={handleSubmit(saveContent)}
         >
           <input
             type="text"
@@ -132,11 +183,16 @@ export default function Course() {
               'Save'
             )}
           </button>
-          {error ? (
+          {formError ? (
+            <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
+              {formError}
+            </div>
+          ) : null}
+          {error && (
             <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
               {error}
             </div>
-          ) : null}
+          )}
         </form>
       </Modal>
     </Layout>

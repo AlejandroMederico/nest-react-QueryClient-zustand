@@ -1,35 +1,70 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
-import { useQuery } from 'react-query';
+import { shallow } from 'zustand/shallow';
 
 import CoursesTable from '../components/courses/CoursesTable';
 import Layout from '../components/layout';
 import Modal from '../components/shared/Modal';
-import CreateCourseRequest from '../models/course/CreateCourseRequest';
-import courseService from '../services/CourseService';
+import type CreateCourseRequest from '../models/course/CreateCourseRequest';
 import useAuth from '../store/authStore';
+import useCourseStore from '../store/courseStore';
 
 export default function Courses() {
+  const { authenticatedUser } = useAuth();
+
+  const [
+    courses,
+    loading,
+    error,
+    setFilters,
+    fetchCourses,
+    addCourse,
+  ] = useCourseStore(
+    (_state) => [
+      _state.filtered,
+      _state.loading,
+      _state.error,
+      _state.setFilters,
+      _state.fetchCourses,
+      _state.addCourse,
+    ],
+    shallow,
+  );
+
+  // filtros UI (solo tocan el store; no API)
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
-  const [addCourseShow, setAddCourseShow] = useState<boolean>(false);
-  const [error, setError] = useState<string>();
+  const [addCourseShow, setAddCourseShow] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const { authenticatedUser } = useAuth();
-  const { data, isLoading } = useQuery(
-    ['courses', name, description],
-    () =>
-      courseService.findAll({
+  // Carga inicial (una vez)
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
+
+  // Debounce corto para filtros locales
+  const timerRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = (window.setTimeout(() => {
+      setFilters({
         name: name || undefined,
         description: description || undefined,
-      }),
-    {
-      refetchInterval: 1000,
-    },
-  );
+      });
+      timerRef.current = null;
+    }, 150) as unknown) as number;
 
+    return () => {
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [name, description, setFilters]);
+
+  // form crear curso
   const {
     register,
     handleSubmit,
@@ -39,12 +74,14 @@ export default function Courses() {
 
   const saveCourse = async (createCourseRequest: CreateCourseRequest) => {
     try {
-      await courseService.save(createCourseRequest);
+      await addCourse(createCourseRequest);
       setAddCourseShow(false);
+      setFormError(null);
       reset();
-      setError(null);
-    } catch (error) {
-      setError(error.response.data.message);
+    } catch (e: any) {
+      setFormError(
+        e?.response?.data?.message ?? e?.message ?? 'Error creating course',
+      );
     }
   };
 
@@ -61,6 +98,7 @@ export default function Courses() {
         </button>
       ) : null}
 
+      {/* Filtros */}
       <div className="table-filter">
         <div className="flex flex-row gap-5">
           <input
@@ -80,9 +118,9 @@ export default function Courses() {
         </div>
       </div>
 
-      <CoursesTable data={data} isLoading={isLoading} />
+      <CoursesTable courses={courses} isLoading={loading} />
 
-      {/* Add User Modal */}
+      {/* Add Course Modal */}
       <Modal show={addCourseShow}>
         <div className="flex">
           <h1 className="font-semibold mb-3">Add Course</h1>
@@ -125,11 +163,16 @@ export default function Courses() {
               'Save'
             )}
           </button>
-          {error ? (
+          {formError ? (
+            <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
+              {formError}
+            </div>
+          ) : null}
+          {error && (
             <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
               {error}
             </div>
-          ) : null}
+          )}
         </form>
       </Modal>
     </Layout>

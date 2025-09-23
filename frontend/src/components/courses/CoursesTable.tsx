@@ -3,26 +3,34 @@ import { AlertTriangle, Loader, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 
-import Course from '../../models/course/Course';
-import UpdateCourseRequest from '../../models/course/UpdateCourseRequest';
-import courseService from '../../services/CourseService';
+import type Course from '../../models/course/Course';
+import type UpdateCourseRequest from '../../models/course/UpdateCourseRequest';
 import useAuth from '../../store/authStore';
+import useCourseStore from '../../store/courseStore';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
 
-interface UsersTableProps {
-  data: Course[];
+interface CoursesTableProps {
+  courses: Course[];
   isLoading: boolean;
 }
 
-export default function CoursesTable({ data, isLoading }: UsersTableProps) {
+export default function CoursesTable({
+  courses,
+  isLoading,
+}: CoursesTableProps) {
   const { authenticatedUser } = useAuth();
-  const [deleteShow, setDeleteShow] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  const deleteCourse = useCourseStore((s) => s.deleteCourse);
+  const updateCourse = useCourseStore((s) => s.updateCourse);
+  const fetchCourses = useCourseStore((s) => s.fetchCourses);
+
+  const [deleteShow, setDeleteShow] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<string>();
-  const [error, setError] = useState<string>();
-  const [updateShow, setUpdateShow] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [updateShow, setUpdateShow] = useState(false);
 
   const {
     register,
@@ -33,35 +41,49 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
   } = useForm<UpdateCourseRequest>();
 
   const handleDelete = async () => {
+    if (!selectedCourseId) return;
     try {
       setIsDeleting(true);
-      await courseService.delete(selectedCourseId);
+      await deleteCourse(selectedCourseId);
+      await fetchCourses(); // re-sync una vez
       setDeleteShow(false);
-    } catch (error) {
-      setError(error.response.data.message);
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ?? e?.message ?? 'Error deleting course',
+      );
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleUpdate = async (updateCourseRequest: UpdateCourseRequest) => {
+  const handleUpdate = async (payload: UpdateCourseRequest) => {
+    if (!selectedCourseId) return;
     try {
-      await courseService.update(selectedCourseId, updateCourseRequest);
+      const body = Object.fromEntries(
+        Object.entries(payload).filter(
+          ([, v]) => v !== undefined && String(v).trim() !== '',
+        ),
+      ) as UpdateCourseRequest;
+
+      await updateCourse(selectedCourseId, body);
+      await fetchCourses();
       setUpdateShow(false);
       reset();
       setError(null);
-    } catch (error) {
-      setError(error.response.data.message);
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ?? e?.message ?? 'Error updating course',
+      );
     }
   };
 
   return (
     <>
       <div className="table-container">
-        <Table columns={['Name', 'Description', 'Created']}>
+        <Table columns={['Name', 'Description', 'Created', 'Actions']}>
           {isLoading
             ? null
-            : data.map(({ id, name, description, dateCreated }) => (
+            : courses.map(({ id, name, description, dateCreated }) => (
                 <tr key={id}>
                   <TableItem>
                     <Link to={`/courses/${id}`}>{name}</Link>
@@ -76,10 +98,8 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
                         className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
                         onClick={() => {
                           setSelectedCourseId(id);
-
                           setValue('name', name);
                           setValue('description', description);
-
                           setUpdateShow(true);
                         }}
                       >
@@ -101,12 +121,14 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
                 </tr>
               ))}
         </Table>
-        {!isLoading && data.length < 1 ? (
+
+        {!isLoading && courses.length < 1 ? (
           <div className="text-center my-5 text-gray-500">
             <h1>Empty</h1>
           </div>
         ) : null}
       </div>
+
       {/* Delete Course Modal */}
       <Modal show={deleteShow}>
         <AlertTriangle size={30} className="text-red-500 mr-5 fixed" />
@@ -149,6 +171,7 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
           </div>
         ) : null}
       </Modal>
+
       {/* Update Course Modal */}
       <Modal show={updateShow}>
         <div className="flex">
@@ -182,7 +205,6 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
             className="input"
             placeholder="Description"
             required
-            disabled={isSubmitting}
             {...register('description')}
           />
           <button className="btn" disabled={isSubmitting}>
