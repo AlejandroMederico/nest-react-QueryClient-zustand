@@ -15,7 +15,7 @@ export class CourseService {
       }).save();
     } catch (error) {
       throw new HttpException(
-        `An error occurred in CourseService.save: ${error.message}`,
+        `CourseService.save: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -35,7 +35,7 @@ export class CourseService {
       });
     } catch (error) {
       throw new HttpException(
-        `An error occurred in CourseService.findAll: ${error.message}`,
+        `CourseService.findAll: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -53,7 +53,7 @@ export class CourseService {
       return course;
     } catch (error) {
       throw new HttpException(
-        `An error occurred in CourseService.findById: ${error.message}`,
+        `CourseService.findById: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -65,7 +65,7 @@ export class CourseService {
       return await Course.create({ id: course.id, ...updateCourseDto }).save();
     } catch (error) {
       throw new HttpException(
-        `An error occurred in CourseService.update: ${error.message}`,
+        `CourseService.update: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -78,7 +78,7 @@ export class CourseService {
       return id;
     } catch (error) {
       throw new HttpException(
-        `An error occurred in CourseService.delete: ${error.message}`,
+        `CourseService.delete: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -89,7 +89,7 @@ export class CourseService {
       return await Course.count();
     } catch (error) {
       throw new HttpException(
-        `An error occurred in CourseService.count: ${error.message}`,
+        `CourseService.count: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

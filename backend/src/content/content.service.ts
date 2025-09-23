@@ -30,7 +30,7 @@ export class ContentService {
       }).save();
     } catch (error) {
       throw new HttpException(
-        `An error occurred in ContentService.save: ${error.message}`,
+        `ContentService.save: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -51,7 +51,7 @@ export class ContentService {
       });
     } catch (error) {
       throw new HttpException(
-        `An error occurred in ContentService.findAll: ${error.message}`,
+        `ContentService.findAll: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -71,7 +71,7 @@ export class ContentService {
       return content;
     } catch (error) {
       throw new HttpException(
-        `An error occurred in ContentService.findById: ${error.message}`,
+        `ContentService.findById: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -89,7 +89,7 @@ export class ContentService {
       return content;
     } catch (error) {
       throw new HttpException(
-        `An error occurred in ContentService.findByCourseIdAndId: ${error.message}`,
+        `ContentService.findByCourseIdAndId: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -112,7 +112,7 @@ export class ContentService {
       });
     } catch (error) {
       throw new HttpException(
-        `An error occurred in ContentService.findAllByCourseId: ${error.message}`,
+        `ContentService.findAllByCourseId: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -138,7 +138,7 @@ export class ContentService {
       }).save();
     } catch (error) {
       throw new HttpException(
-        `An error occurred in ContentService.update: ${error.message}`,
+        `ContentService.update: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -157,7 +157,7 @@ export class ContentService {
       return id;
     } catch (error) {
       throw new HttpException(
-        `An error occurred in ContentService.delete: ${error.message}`,
+        `ContentService.delete: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -168,7 +168,7 @@ export class ContentService {
       return await Content.count();
     } catch (error) {
       throw new HttpException(
-        `An error occurred in ContentService.count: ${error.message}`,
+        `ContentService.count: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

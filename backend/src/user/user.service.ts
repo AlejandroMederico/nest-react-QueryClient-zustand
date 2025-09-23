@@ -24,7 +24,7 @@ export class UserService {
       return await User.create(createUserDto).save();
     } catch (error) {
       throw new HttpException(
-        `An error UserService.save message: ${error.message}`,
+        `UserService.save message: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -47,7 +47,7 @@ export class UserService {
       });
     } catch (error) {
       throw new HttpException(
-        `An error UserService.findAll message: ${error.message}`,
+        `UserService.findAll message: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -67,7 +67,7 @@ export class UserService {
       return user;
     } catch (error) {
       throw new HttpException(
-        `An error UserService.findById message: ${error.message}`,
+        `UserService.findById message: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -78,7 +78,7 @@ export class UserService {
       return await User.findOne({ where: { username } });
     } catch (error) {
       throw new HttpException(
-        `An error UserService.findByUsername message: ${error.message}`,
+        `UserService.findByUsername message: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -109,7 +109,7 @@ export class UserService {
       return await User.create({ id, ...updateUserDto }).save();
     } catch (error) {
       throw new HttpException(
-        `An error UserService.update message: ${error.message}`,
+        `UserService.update message: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -121,7 +121,7 @@ export class UserService {
       return id;
     } catch (error) {
       throw new HttpException(
-        `An error UserService.delete message: ${error.message}`,
+        `UserService.delete message: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -132,7 +132,7 @@ export class UserService {
       return await User.count();
     } catch (error) {
       throw new HttpException(
-        `An error UserService.count message: ${error.message}`,
+        `UserService.count message: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -146,7 +146,7 @@ export class UserService {
       });
     } catch (error) {
       throw new HttpException(
-        `An error UserService.setRefreshToken message: ${error.message}`,
+        `UserService.setRefreshToken message: ${error.message}`,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -164,7 +164,7 @@ export class UserService {
       await user.save();
     } catch (error) {
       throw new HttpException(
-        `An error UserService.softDelete message: ${error.message}`,
+        `UserService.softDelete message: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

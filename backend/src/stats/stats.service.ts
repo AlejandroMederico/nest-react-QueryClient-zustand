@@ -20,9 +20,7 @@ export class StatsService {
 
       return { numberOfUsers, numberOfContents, numberOfCourses };
     } catch (error) {
-      throw new Error(
-        `An error StatsService.getStats message: ${error.message}`,
-      );
+      throw new Error(`StatsService.getStats message: ${error.message}`);
     }
   }
 }

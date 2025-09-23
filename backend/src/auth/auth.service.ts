@@ -55,7 +55,7 @@ export class AuthService {
       return { token: accessToken, user };
     } catch (error) {
       throw new HttpException(
-        `An error AuthService.login message: ${error.message}`,
+        `AuthService.login message: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -70,7 +70,7 @@ export class AuthService {
       return true;
     } catch (error) {
       throw new HttpException(
-        `An error AuthService.logout message: ${error.message}`,
+        `AuthService.logout message: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -118,7 +118,7 @@ export class AuthService {
       response.clearCookie('refresh-token');
       await this.userService.setRefreshToken(id, null);
       throw new HttpException(
-        `An error AuthService.refresh message: ${error.message}`,
+        `AuthService.refresh message: ${error.message}`,
         HttpStatus.FORBIDDEN,
       );
     }
