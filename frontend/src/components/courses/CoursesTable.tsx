@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Loader, X } from 'react-feather';
+import { AlertTriangle, Edit2, Loader, Trash2, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 
@@ -100,7 +100,7 @@ export default function CoursesTable({
                           setUpdateShow(true);
                         }}
                       >
-                        Edit
+                        <Edit2 size={18} />
                       </button>
                     ) : null}
                     {authenticatedUser?.role === 'admin' ? (
@@ -111,7 +111,7 @@ export default function CoursesTable({
                           setDeleteShow(true);
                         }}
                       >
-                        Delete
+                        <Trash2 size={18} />
                       </button>
                     ) : null}
                   </TableItem>

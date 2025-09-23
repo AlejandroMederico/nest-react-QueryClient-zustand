@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Loader, X } from 'react-feather';
+import { AlertTriangle, Edit2, Loader, Trash2, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 
 import type UpdateUserRequest from '../../models/user/UpdateUserRequest';
@@ -107,7 +107,7 @@ export default function UsersTable({ isLoading, users }: UsersTableProps) {
                             setUpdateShow(true);
                           }}
                         >
-                          Edit
+                          <Edit2 size={18} />
                         </button>
                         <button
                           className="text-red-600 hover:text-red-900 focus:outline-none"
@@ -116,7 +116,7 @@ export default function UsersTable({ isLoading, users }: UsersTableProps) {
                             setDeleteShow(true);
                           }}
                         >
-                          Delete
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </TableItem>
