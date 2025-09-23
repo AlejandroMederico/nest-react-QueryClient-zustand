@@ -9,6 +9,7 @@ import Modal from '../components/shared/Modal';
 import type CreateCourseRequest from '../models/course/CreateCourseRequest';
 import useAuth from '../store/authStore';
 import useCourseStore from '../store/courseStore';
+import { toErrorMessage } from '../utils/errors';
 
 export default function Courses() {
   const { authenticatedUser } = useAuth();
@@ -78,10 +79,8 @@ export default function Courses() {
       setAddCourseShow(false);
       setFormError(null);
       reset();
-    } catch (e: any) {
-      setFormError(
-        e?.response?.data?.message ?? e?.message ?? 'Error creating course',
-      );
+    } catch (e: unknown) {
+      setFormError(toErrorMessage(e, 'Error creating course'));
     }
   };
 

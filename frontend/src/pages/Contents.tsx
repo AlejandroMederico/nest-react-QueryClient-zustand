@@ -11,6 +11,7 @@ import type CreateContentRequest from '../models/content/CreateContentRequest';
 import courseService from '../services/CourseService';
 import useAuth from '../store/authStore';
 import useContentStore from '../store/contentStore';
+import { toErrorMessage } from '../utils/errors';
 
 export default function Course() {
   const { id: courseId } = useParams<{ id: string }>();
@@ -93,10 +94,8 @@ export default function Course() {
       setAddContentShow(false);
       setFormError(null);
       reset();
-    } catch (e: any) {
-      setFormError(
-        e?.response?.data?.message ?? e?.message ?? 'Error creating content',
-      );
+    } catch (e: unknown) {
+      setFormError(toErrorMessage(e, 'Error creating content'));
     }
   };
 

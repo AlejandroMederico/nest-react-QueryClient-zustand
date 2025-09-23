@@ -7,13 +7,10 @@ import Layout from '../components/layout';
 import Modal from '../components/shared/Modal';
 import UsersTable from '../components/users/UsersTable';
 import CreateUserRequest from '../models/user/CreateUserRequest';
-import useAuth from '../store/authStore';
 import useUserStore from '../store/userStore';
 import { toErrorMessage } from '../utils/errors';
 
 export default function Users() {
-  const { authenticatedUser } = useAuth();
-
   const [
     filtered,
     loading,

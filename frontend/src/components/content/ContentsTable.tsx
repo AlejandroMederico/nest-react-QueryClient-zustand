@@ -6,6 +6,7 @@ import type Content from '../../models/content/Content';
 import type UpdateContentRequest from '../../models/content/UpdateContentRequest';
 import useAuth from '../../store/authStore';
 import useContentStore from '../../store/contentStore';
+import { toErrorMessage } from '../../utils/errors';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
@@ -49,10 +50,8 @@ export default function ContentsTable({
       await fetchContents(courseId); // re-sync una vez
       setDeleteShow(false);
       setError(null);
-    } catch (e: any) {
-      setError(
-        e?.response?.data?.message ?? e?.message ?? 'Error deleting content',
-      );
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, 'Error deleting content'));
     } finally {
       setIsDeleting(false);
     }
@@ -72,10 +71,8 @@ export default function ContentsTable({
       setUpdateShow(false);
       reset();
       setError(null);
-    } catch (e: any) {
-      setError(
-        e?.response?.data?.message ?? e?.message ?? 'Error updating content',
-      );
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, 'Error updating content'));
     }
   };
 

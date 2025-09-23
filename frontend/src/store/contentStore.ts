@@ -7,6 +7,7 @@ import type ContentQuery from '../models/content/ContentQuery';
 import type CreateContentRequest from '../models/content/CreateContentRequest';
 import type UpdateContentRequest from '../models/content/UpdateContentRequest';
 import contentService from '../services/ContentService';
+import { toErrorMessage } from '../utils/errors';
 
 type CourseBucket = {
   all: Content[];
@@ -71,15 +72,6 @@ const applyLocalFilter = (items: Content[], query: ContentQuery) => {
 
 const deriveFiltered = (all: Content[], filters: ContentQuery) =>
   sortContents(applyLocalFilter(all, filters));
-
-const errorToMessage = (e: unknown, fallback: string) => {
-  if (typeof e === 'string') return e;
-  if (e && typeof e === 'object') {
-    const anyE = e as any;
-    return anyE?.response?.data?.message ?? anyE?.message ?? fallback;
-  }
-  return fallback;
-};
 
 const ensureCourseId = (courseId: string) => {
   if (!courseId) throw new Error('Course ID is required');
@@ -164,7 +156,7 @@ const useContentStore = createWithEqualityFn<State & Actions>()(
             })),
           );
         } catch (e: unknown) {
-          const msg = errorToMessage(e, 'Error fetching contents');
+          const msg = toErrorMessage(e, 'Error fetching contents');
           set((state) =>
             updateCourse(state, courseId, (prev0) => {
               const prev = ensureBucket(prev0);
@@ -175,82 +167,85 @@ const useContentStore = createWithEqualityFn<State & Actions>()(
       },
 
       async addContent(courseId, payload) {
+        ensureCourseId(courseId);
+        ensurePayload(payload, 'add');
+
+        set((state) =>
+          updateCourse(state, courseId, (prev0) => ({
+            ...ensureBucket(prev0),
+            loading: true,
+            error: null,
+          })),
+        );
+
         try {
-          ensureCourseId(courseId);
-          ensurePayload(payload, 'add');
-
-          set((state) =>
-            updateCourse(state, courseId, (prev0) => ({
-              ...ensureBucket(prev0),
-              loading: true,
-              error: null,
-            })),
-          );
-
           await contentService.save(courseId, payload);
           await get().fetchContents(courseId);
         } catch (e: unknown) {
-          const msg = errorToMessage(e, 'Error adding content');
+          // No setear error global (evita doble mensaje: banner + modal)
+          throw e;
+        } finally {
           set((state) =>
             updateCourse(state, courseId, (prev0) => ({
               ...ensureBucket(prev0),
               loading: false,
-              error: msg,
             })),
           );
         }
       },
 
       async updateContent(courseId, id, payload) {
+        ensureCourseId(courseId);
+        if (!id) throw new Error('Content ID is required');
+        ensurePayload(payload, 'update');
+
+        set((state) =>
+          updateCourse(state, courseId, (prev0) => ({
+            ...ensureBucket(prev0),
+            loading: true,
+            error: null,
+          })),
+        );
+
         try {
-          ensureCourseId(courseId);
-          if (!id) throw new Error('Content ID is required');
-          ensurePayload(payload, 'update');
-
-          set((state) =>
-            updateCourse(state, courseId, (prev0) => ({
-              ...ensureBucket(prev0),
-              loading: true,
-              error: null,
-            })),
-          );
-
           await contentService.update(courseId, id, payload);
           await get().fetchContents(courseId);
         } catch (e: unknown) {
-          const msg = errorToMessage(e, 'Error updating content');
+          // No setear error global (evita doble mensaje)
+          throw e;
+        } finally {
           set((state) =>
             updateCourse(state, courseId, (prev0) => ({
               ...ensureBucket(prev0),
               loading: false,
-              error: msg,
             })),
           );
         }
       },
 
       async deleteContent(courseId, id) {
+        ensureCourseId(courseId);
+        if (!id) throw new Error('Content ID is required');
+
+        set((state) =>
+          updateCourse(state, courseId, (prev0) => ({
+            ...ensureBucket(prev0),
+            loading: true,
+            error: null,
+          })),
+        );
+
         try {
-          ensureCourseId(courseId);
-          if (!id) throw new Error('Content ID is required');
-
-          set((state) =>
-            updateCourse(state, courseId, (prev0) => ({
-              ...ensureBucket(prev0),
-              loading: true,
-              error: null,
-            })),
-          );
-
           await contentService.delete(courseId, id);
           await get().fetchContents(courseId);
         } catch (e: unknown) {
-          const msg = errorToMessage(e, 'Error deleting content');
+          // No setear error global (evita doble mensaje)
+          throw e;
+        } finally {
           set((state) =>
             updateCourse(state, courseId, (prev0) => ({
               ...ensureBucket(prev0),
               loading: false,
-              error: msg,
             })),
           );
         }

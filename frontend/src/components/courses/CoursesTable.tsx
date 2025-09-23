@@ -7,6 +7,7 @@ import type Course from '../../models/course/Course';
 import type UpdateCourseRequest from '../../models/course/UpdateCourseRequest';
 import useAuth from '../../store/authStore';
 import useCourseStore from '../../store/courseStore';
+import { toErrorMessage } from '../../utils/errors';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
@@ -47,10 +48,8 @@ export default function CoursesTable({
       await deleteCourse(selectedCourseId);
       await fetchCourses(); // re-sync una vez
       setDeleteShow(false);
-    } catch (e: any) {
-      setError(
-        e?.response?.data?.message ?? e?.message ?? 'Error deleting course',
-      );
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, 'Error deleting course'));
     } finally {
       setIsDeleting(false);
     }
@@ -70,10 +69,8 @@ export default function CoursesTable({
       setUpdateShow(false);
       reset();
       setError(null);
-    } catch (e: any) {
-      setError(
-        e?.response?.data?.message ?? e?.message ?? 'Error updating course',
-      );
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, 'Error updating course'));
     }
   };
 

@@ -5,6 +5,7 @@ import type CourseQuery from '../models/course/CourseQuery';
 import type CreateCourseRequest from '../models/course/CreateCourseRequest';
 import type UpdateCourseRequest from '../models/course/UpdateCourseRequest';
 import courseService from '../services/CourseService';
+import { toErrorMessage } from '../utils/errors';
 
 type State = {
   all: Course[];
@@ -66,12 +67,12 @@ const useCourseStore = createWithEqualityFn<State & Actions>()((set, get) => ({
       const sorted = sortCourses(data);
       const filtered = applyLocalFilter(sorted, get().filters);
       set({ all: sorted, filtered, loading: false });
-    } catch (e: any) {
-      set({
+    } catch (e: unknown) {
+      set((s) => ({
+        ...s,
         loading: false,
-        error:
-          e?.response?.data?.message ?? e?.message ?? 'Error fetching courses',
-      });
+        error: toErrorMessage(e, 'Error fetching courses'),
+      }));
     }
   },
 
@@ -84,12 +85,9 @@ const useCourseStore = createWithEqualityFn<State & Actions>()((set, get) => ({
       }
       await courseService.save(payload);
       await get().fetchCourses();
-    } catch (e: any) {
-      set({
-        loading: false,
-        error:
-          e?.response?.data?.message ?? e?.message ?? 'Error adding course',
-      });
+    } catch (e: unknown) {
+      set((s) => ({ ...s, loading: false }));
+      throw e;
     }
   },
 
@@ -106,12 +104,9 @@ const useCourseStore = createWithEqualityFn<State & Actions>()((set, get) => ({
       }
       await courseService.update(id, payload);
       await get().fetchCourses();
-    } catch (e: any) {
-      set({
-        loading: false,
-        error:
-          e?.response?.data?.message ?? e?.message ?? 'Error updating course',
-      });
+    } catch (e: unknown) {
+      set((s) => ({ ...s, loading: false }));
+      throw e;
     }
   },
 
@@ -124,12 +119,9 @@ const useCourseStore = createWithEqualityFn<State & Actions>()((set, get) => ({
       }
       await courseService.delete(id);
       await get().fetchCourses();
-    } catch (e: any) {
-      set({
-        loading: false,
-        error:
-          e?.response?.data?.message ?? e?.message ?? 'Error deleting course',
-      });
+    } catch (e: unknown) {
+      set((s) => ({ ...s, loading: false }));
+      throw e;
     }
   },
 }));

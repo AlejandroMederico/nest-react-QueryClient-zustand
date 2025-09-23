@@ -39,9 +39,8 @@ export default function App() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [authenticatedUser, setAuthenticatedUser, isLoaded]);
 
-  // Spinner solo para bootstrap de autenticación
   if (!isLoaded) return <Spinner />;
 
   return (
