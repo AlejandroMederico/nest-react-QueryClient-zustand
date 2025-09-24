@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 
-import authService from './AuthService';
+import { authService } from './AuthService';
 
 const axiosInstance = axios.create({
   baseURL: '/api/v1',
@@ -17,7 +17,6 @@ axiosInstance.interceptors.response.use(
       _retry?: boolean;
     };
 
-    // No intentes refrescar si la request original es al propio refresh o login
     const url = (originalRequest.url || '').toString();
     const isAuthEndpoint =
       url.includes('/auth/refresh') || url.includes('/auth/login');

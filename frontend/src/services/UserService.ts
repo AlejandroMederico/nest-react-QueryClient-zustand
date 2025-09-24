@@ -1,4 +1,3 @@
-// services/UserService.ts
 import CreateUserRequest from '../models/user/CreateUserRequest';
 import UpdateUserRequest from '../models/user/UpdateUserRequest';
 import UserQuery from '../models/user/UserQuery';
@@ -59,5 +58,5 @@ class UserService {
     }
   }
 }
-
-export default new UserService();
+const userService = new UserService();
+export { userService };

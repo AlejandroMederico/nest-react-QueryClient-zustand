@@ -9,7 +9,7 @@ import ContentsTable from '../components/content/ContentsTable';
 import Layout from '../components/layout';
 import Modal from '../components/shared/Modal';
 import type CreateContentRequest from '../models/content/CreateContentRequest';
-import courseService from '../services/CourseService';
+import { courseService } from '../services/CourseService';
 import useAuth from '../store/authStore';
 import useContentStore from '../store/contentStore';
 import { toErrorMessage } from '../utils/errors';

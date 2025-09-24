@@ -6,5 +6,5 @@ class StatsService {
     return (await apiService.get<Stats>('/stats')).data;
   }
 }
-
-export default new StatsService();
+const statsService = new StatsService();
+export { statsService };

@@ -6,7 +6,7 @@ import type Content from '../models/content/Content';
 import type ContentQuery from '../models/content/ContentQuery';
 import type CreateContentRequest from '../models/content/CreateContentRequest';
 import type UpdateContentRequest from '../models/content/UpdateContentRequest';
-import contentService from '../services/ContentService';
+import { contentService } from '../services/ContentService';
 import { toErrorMessage } from '../utils/errors';
 
 type CourseBucket = {
@@ -140,7 +140,6 @@ const useContentStore = createWithEqualityFn<State & Actions>()(
         );
 
         try {
-          // Si tu ContentService soporta AbortController/signal, pásalo acá.
           const data = await contentService.findAll(courseId, {});
           const all = sortContents(data);
           const filters = get().byCourse[courseId]?.filters ?? {};

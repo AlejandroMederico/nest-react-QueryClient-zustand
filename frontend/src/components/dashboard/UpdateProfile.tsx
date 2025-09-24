@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 
 import UpdateUserRequest from '../../models/user/UpdateUserRequest';
-import userService from '../../services/UserService';
+import { userService } from '../../services/UserService';
 import useAuth from '../../store/authStore';
 
 export default function UpdateProfile() {

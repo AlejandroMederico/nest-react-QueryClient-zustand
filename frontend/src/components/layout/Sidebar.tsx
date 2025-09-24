@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 import sidebarBg from '../../assets/sidemenu-bg.jpg';
 import logo from '../../assets/urbano-logo-white.png';
-import authService from '../../services/AuthService';
+import { authService } from '../../services/AuthService';
 import useAuth from '../../store/authStore';
 import SidebarItem from './SidebarItem';
 

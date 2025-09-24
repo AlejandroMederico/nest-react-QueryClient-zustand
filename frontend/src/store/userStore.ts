@@ -4,7 +4,7 @@ import type CreateUserRequest from '../models/user/CreateUserRequest';
 import type UpdateUserRequest from '../models/user/UpdateUserRequest';
 import type User from '../models/user/User';
 import type UserQuery from '../models/user/UserQuery';
-import userService from '../services/UserService';
+import { userService } from '../services/UserService';
 import { toErrorMessage } from '../utils/errors';
 
 type State = {

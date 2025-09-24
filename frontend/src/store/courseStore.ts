@@ -4,7 +4,7 @@ import type Course from '../models/course/Course';
 import type CourseQuery from '../models/course/CourseQuery';
 import type CreateCourseRequest from '../models/course/CreateCourseRequest';
 import type UpdateCourseRequest from '../models/course/UpdateCourseRequest';
-import courseService from '../services/CourseService';
+import { courseService } from '../services/CourseService';
 import { toErrorMessage } from '../utils/errors';
 
 type State = {

@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom';
 
 import logo from '../assets/favicon.png';
 import LoginRequest from '../models/auth/LoginRequest';
-import authService from '../services/AuthService';
+import { authService } from '../services/AuthService';
 import useAuth from '../store/authStore';
 
 export default function Login() {
