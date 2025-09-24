@@ -1,0 +1,965 @@
+{
+  "info": {
+    "_postman_id": "5f9b2a20-6c73-4f34-a899-3ce2d284acd4",
+    "name": "Carna Project Api Test",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "    pm.environment.set(\"access_token\", pm.response.json().token);\r",
+              "})\r",
+              "\r",
+              "pm.test(\"Should return token and user matching username\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.token).to.match(/^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$/);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should return refresh token cookie\", function () {\r",
+              "    pm.expect(pm.cookies.has('refresh-token')).to.be.true;\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"username\":\"admin\",\r\n    \"password\":\"admin123\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "auth", "login"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Auth Refresh",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "    pm.environment.set(\"access_token\", pm.response.json().token);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Your test name\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "     pm.expect(jsonData.token).to.match(/^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$/);\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/auth/refresh",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "auth", "refresh"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Users",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const now = Date.now();",
+              "pm.environment.set('new_username', `test${now}`);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.environment.set(\"user_id\", body.id);",
+              "});",
+              "",
+              "pm.test(\"Should get created user\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    const newUsername = pm.environment.get(\"new_username\");",
+              "    pm.expect(responseJson.id).to.match(/[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}/);",
+              "    pm.expect(responseJson.firstName).to.eql(\"test\");",
+              "    pm.expect(responseJson.lastName).to.eql(\"test\");",
+              "    pm.expect(responseJson.username).to.eql(newUsername);",
+              "    pm.expect(responseJson.isActive).to.be.true;",
+              "    pm.expect(responseJson.role).to.eql(\"user\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"firstName\": \"test\",\r\n    \"lastName\": \"test\",\r\n    \"username\": \"{{new_username}}\",\r\n    \"password\": \"test123456\",\r\n    \"role\": \"user\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "users"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Users",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response should be an array\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an(\"array\");\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "users"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "users/{{user_id}}",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Should get user with matching id\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    const id = pm.environment.get(\"user_id\");",
+              "    const newUsername = pm.environment.get(\"new_username\");",
+              "",
+              "    pm.expect(responseJson.id).to.eql(id);",
+              "    pm.expect(responseJson.firstName).to.eql(\"test\");",
+              "    pm.expect(responseJson.lastName).to.eql(\"test\");",
+              "    pm.expect(responseJson.username).to.eql(newUsername);",
+              "    pm.expect(responseJson.role).to.eql(\"user\");",
+              "    pm.expect(responseJson.isActive).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/users/{{user_id}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "users", "{{user_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "users/{{user_id}}",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "let id = pm.environment.get('user_id') || Date.now().toString();",
+              "id = String(id).replace(/-/g,'');",
+              "const suffix = id.slice(0, 10);",
+              "pm.environment.set('updated_username', `test2${suffix}`);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Should get id and updated fields\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    const id = pm.environment.get(\"user_id\");",
+              "    const updatedUsername = pm.environment.get(\"updated_username\");",
+              "",
+              "    pm.expect(responseJson.id).to.eql(id);",
+              "    pm.expect(responseJson.firstName).to.eql(\"test2\");",
+              "    pm.expect(responseJson.lastName).to.eql(\"test2\");",
+              "    pm.expect(responseJson.username).to.eql(updatedUsername);",
+              "    pm.expect(responseJson.role).to.eql(\"editor\");",
+              "    pm.expect(responseJson.isActive).to.be.false;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Should get id and updated fields\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    const id = pm.environment.get(\"user_id\");",
+              "    const updatedUsername = pm.environment.get(\"updated_username\");",
+              "",
+              "    pm.expect(responseJson.id).to.eql(id);",
+              "    pm.expect(responseJson.firstName).to.eql(\"test2\");",
+              "    pm.expect(responseJson.lastName).to.eql(\"test2\");",
+              "    pm.expect(responseJson.username).to.eql(updatedUsername);",
+              "    pm.expect(responseJson.role).to.eql(\"editor\");",
+              "    pm.expect(responseJson.isActive).to.be.false;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"firstName\": \"test2\",\r\n    \"lastName\": \"test2\",\r\n    \"username\": \"{{updated_username}}\",\r\n    \"password\": \"test2123456\",\r\n    \"isActive\": false,\r\n    \"role\": \"editor\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/users/{{user_id}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "users", "{{user_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "users/{{user_id}}",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 204\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});",
+              "",
+              "pm.test(\"Empty body\", function () {",
+              "    pm.expect(pm.response.text()).to.eql(\"\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/users/{{user_id}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "users", "{{user_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "courses",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "    pm.environment.set(\"course_id\", pm.response.json().id);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should return created course\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    const id = pm.environment.get(\"course_id\");\r",
+              "\r",
+              "    pm.expect(jsonData.name).to.eql(\"test\");\r",
+              "    pm.expect(jsonData.description).to.eql(\"test\");\r",
+              "    pm.expect(jsonData.dateCreated).to.match(/\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d(?:\\.\\d+)?Z?/gm)\r",
+              "    pm.expect(jsonData.id).to.eql(id);\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"test\",\r\n    \"description\": \"test\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/courses",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "courses"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "courses",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should get an array\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an(\"array\");\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/courses",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "courses"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "courses/{{course_id}}",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should get user with matching id\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    const id = pm.environment.get(\"course_id\");\r",
+              "    \r",
+              "    pm.expect(jsonData.id).to.eql(id);\r",
+              "    pm.expect(jsonData.name).to.eql(\"test\");\r",
+              "    pm.expect(jsonData.description).to.eql(\"test\");\r",
+              "    pm.expect(jsonData.dateCreated).to.match(/\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d(?:\\.\\d+)?Z?/gm);\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "courses", "{{course_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "courses/{{course_id}}",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should return updated fields\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    const id = pm.environment.get(\"course_id\");\r",
+              "\r",
+              "    pm.expect(jsonData.id).to.eql(id);\r",
+              "    pm.expect(jsonData.name).to.eql(\"test2\");\r",
+              "    pm.expect(jsonData.description).to.eql(\"test2\");\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"test2\",\r\n    \"description\": \"test2\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "courses", "{{course_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "courses/{{course_id}}/contents",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "    pm.environment.set(\"content_id\", pm.response.json().id);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should return the created content\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    const course_id = pm.environment.get(\"course_id\");\r",
+              "    const content_id = pm.environment.get(\"content_id\");\r",
+              "\r",
+              "    pm.expect(jsonData.courseId).to.eql(course_id);\r",
+              "    pm.expect(jsonData.name).to.eql(\"test\");\r",
+              "    pm.expect(jsonData.description).to.eql(\"test\");\r",
+              "    pm.expect(jsonData.dateCreated).to.match(/\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d(?:\\.\\d+)?Z?/gm)\r",
+              "    pm.expect(jsonData.id).to.eql(content_id);\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"test\",\r\n    \"description\": \"test\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}/contents",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "courses", "{{course_id}}", "contents"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "courses/{{course_id}}/contents",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should return an array\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.be.an(\"array\");\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}/contents",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "courses", "{{course_id}}", "contents"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "courses/{{course_id}}/contents/{{content_id}}",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should return the updated values\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    const id = pm.environment.get(\"content_id\");\r",
+              "    \r",
+              "    pm.expect(jsonData.id).to.eql(id);\r",
+              "    pm.expect(jsonData.name).to.eql(\"test2\");\r",
+              "    pm.expect(jsonData.description).to.eql(\"test2\");\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"test2\",\r\n    \"description\": \"test2\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}/contents/{{content_id}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": [
+            "api",
+            "v1",
+            "courses",
+            "{{course_id}}",
+            "contents",
+            "{{content_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "courses/{{course_id}}/contents/{{content_id}}",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should return deleted content's id\", function () {\r",
+              "    const id = pm.environment.get(\"content_id\");\r",
+              "    pm.response.to.have.body(id);\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}/contents/{{content_id}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": [
+            "api",
+            "v1",
+            "courses",
+            "{{course_id}}",
+            "contents",
+            "{{content_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "courses/{{course_id}}",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should return deleted course's id\", function () {\r",
+              "    const id = pm.environment.get(\"course_id\");\r",
+              "    pm.response.to.have.body(id);\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "courses", "{{course_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "stats",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should return stats\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.numberOfUsers).to.be.a(\"number\");\r",
+              "    pm.expect(jsonData.numberOfContents).to.be.a(\"number\");\r",
+              "    pm.expect(jsonData.numberOfCourses).to.be.a(\"number\");\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/stats",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "stats"]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "auth/logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Should return true\", function () {\r",
+              "    pm.response.to.have.body(\"true\");\r",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/auth/logout",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "auth", "logout"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ]
+}
