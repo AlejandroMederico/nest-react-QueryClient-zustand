@@ -1,32 +1,27 @@
-FROM node:alpine as build
-
+# ---- base con Node 18.20.4 ----
+ARG NODE_VERSION=18.20.4
+FROM node:${NODE_VERSION}-alpine AS base
 WORKDIR /app
+RUN apk add --no-cache libc6-compat
 
-COPY package.json .
-COPY yarn.lock .
+# ---- deps (compila nativos: bcrypt, etc.) ----
+FROM base AS deps
+RUN apk add --no-cache python3 make g++
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
-RUN yarn
-
+# ---- build ----
+FROM base AS build
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
 RUN yarn build
 
-#---
-
-FROM node:alpine
-
-WORKDIR /app
-
+# ---- runner ----
+FROM base AS runner
 ENV NODE_ENV=production
-
-COPY package.json .
-COPY yarn.lock .
-COPY ormconfig.js .
-
-RUN yarn install --production
-
+WORKDIR /app
 COPY --from=build /app/dist ./dist
-
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json ormconfig.js ./
 EXPOSE 5000
-
-ENTRYPOINT [ "yarn", "start:prod" ]
+CMD ["node", "dist/main"]
