@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery } from 'react-query';
 
 import UpdateProfile from '../components/dashboard/UpdateProfile';

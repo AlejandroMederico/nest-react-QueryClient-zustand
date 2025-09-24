@@ -1,10 +1,5 @@
 import React, { lazy, Suspense, useEffect, useState } from 'react';
-import {
-  BrowserRouter as Router,
-  Redirect,
-  Route,
-  Switch,
-} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 
 import { Spinner } from './components/shared/Spinner';
 import { AuthRoute, PrivateRoute } from './Route';
@@ -29,17 +24,16 @@ export default function App() {
           const authResponse = await authService.refresh();
           if (isMounted) setAuthenticatedUser(authResponse.user ?? null);
         }
-      } catch (error) {
+      } catch {
         if (isMounted) setAuthenticatedUser(null);
       } finally {
         if (isMounted) setIsLoaded(true);
       }
     })();
-
     return () => {
       isMounted = false;
     };
-  }, [authenticatedUser, setAuthenticatedUser, isLoaded]);
+  }, [authenticatedUser, setAuthenticatedUser]);
 
   if (!isLoaded) return <Spinner />;
 
@@ -58,8 +52,12 @@ export default function App() {
           <PrivateRoute exact path="/courses/:id" component={Contents} />
           <AuthRoute exact path="/login" component={Login} />
 
-          {/* catch-all: cualquier ruta no definida -> /login */}
-          <Route render={() => <Redirect to="/login" />} />
+          <Route
+            render={({ history, location }) => {
+              if (location.pathname !== '/login') history.replace('/login');
+              return null;
+            }}
+          />
         </Switch>
       </Suspense>
     </Router>

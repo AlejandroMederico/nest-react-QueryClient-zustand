@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { shallow } from 'zustand/shallow';
@@ -14,24 +15,18 @@ import { toErrorMessage } from '../utils/errors';
 export default function Courses() {
   const { authenticatedUser } = useAuth();
 
-  const [
-    courses,
-    loading,
-    error,
-    setFilters,
-    fetchCourses,
-    addCourse,
-  ] = useCourseStore(
-    (_state) => [
-      _state.filtered,
-      _state.loading,
-      _state.error,
-      _state.setFilters,
-      _state.fetchCourses,
-      _state.addCourse,
-    ],
-    shallow,
-  );
+  const [courses, loading, error, setFilters, fetchCourses, addCourse] =
+    useCourseStore(
+      (_state) => [
+        _state.filtered,
+        _state.loading,
+        _state.error,
+        _state.setFilters,
+        _state.fetchCourses,
+        _state.addCourse,
+      ],
+      shallow,
+    );
 
   // filtros UI (solo tocan el store; no API)
   const [name, setName] = useState('');
@@ -49,13 +44,13 @@ export default function Courses() {
   const timerRef = useRef<number | null>(null);
   useEffect(() => {
     if (timerRef.current) window.clearTimeout(timerRef.current);
-    timerRef.current = (window.setTimeout(() => {
+    timerRef.current = window.setTimeout(() => {
       setFilters({
         name: name || undefined,
         description: description || undefined,
       });
       timerRef.current = null;
-    }, 150) as unknown) as number;
+    }, 150) as unknown as number;
 
     return () => {
       if (timerRef.current) {

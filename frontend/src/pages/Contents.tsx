@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router';
@@ -60,13 +61,13 @@ export default function Course() {
   useEffect(() => {
     if (!courseId) return;
     if (timerRef.current) window.clearTimeout(timerRef.current);
-    timerRef.current = (window.setTimeout(() => {
+    timerRef.current = window.setTimeout(() => {
       setFilters(courseId, {
         name: name || undefined,
         description: description || undefined,
       });
       timerRef.current = null;
-    }, 150) as unknown) as number;
+    }, 150) as unknown as number;
 
     return () => {
       if (timerRef.current) {

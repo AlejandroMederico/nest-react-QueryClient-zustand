@@ -257,9 +257,10 @@ const useContentStore = createWithEqualityFn<State & Actions>()(
 
 export default useContentStore;
 
-// ——— Selectores recomendados (evitan re-render de toda la store) ———
-export const selectBucket = (courseId: string) => (s: State): CourseBucket =>
-  s.byCourse[courseId] ?? emptyBucket;
+export const selectBucket =
+  (courseId: string) =>
+  (s: State): CourseBucket =>
+    s.byCourse[courseId] ?? emptyBucket;
 
 export const selectFiltered = (courseId: string) => (s: State) =>
   (s.byCourse[courseId]?.filtered ?? []) as Content[];

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { shallow } from 'zustand/shallow';
@@ -11,24 +12,18 @@ import useUserStore from '../store/userStore';
 import { toErrorMessage } from '../utils/errors';
 
 export default function Users() {
-  const [
-    filtered,
-    loading,
-    error,
-    setFilters,
-    fetchUsers,
-    addUser,
-  ] = useUserStore(
-    (s) => [
-      s.filtered,
-      s.loading,
-      s.error,
-      s.setFilters,
-      s.fetchUsers,
-      s.addUser,
-    ],
-    shallow,
-  );
+  const [filtered, loading, error, setFilters, fetchUsers, addUser] =
+    useUserStore(
+      (s) => [
+        s.filtered,
+        s.loading,
+        s.error,
+        s.setFilters,
+        s.fetchUsers,
+        s.addUser,
+      ],
+      shallow,
+    );
 
   // filtros UI
   const [firstName, setFirstName] = useState('');
@@ -48,7 +43,7 @@ export default function Users() {
   const timerRef = useRef<number | null>(null);
   useEffect(() => {
     if (timerRef.current) window.clearTimeout(timerRef.current);
-    timerRef.current = (window.setTimeout(() => {
+    timerRef.current = window.setTimeout(() => {
       setFilters({
         firstName: firstName || undefined,
         lastName: lastName || undefined,
@@ -56,7 +51,7 @@ export default function Users() {
         role: role || undefined,
       });
       timerRef.current = null;
-    }, 150) as unknown) as number;
+    }, 150) as unknown as number;
 
     return () => {
       if (timerRef.current) {
