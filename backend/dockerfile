@@ -1,27 +1,40 @@
-# ---- base con Node 18.20.4 ----
-ARG NODE_VERSION=18.20.4
-FROM node:${NODE_VERSION}-alpine AS base
+# ---------- BUILDER ----------
+FROM node:20-alpine AS builder
 WORKDIR /app
-RUN apk add --no-cache libc6-compat
 
-# ---- deps (compila nativos: bcrypt, etc.) ----
-FROM base AS deps
-RUN apk add --no-cache python3 make g++
+# Yarn ya viene, no lo reinstalamos
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
-# ---- build ----
-FROM base AS build
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+# Compilar a dist/
+COPY tsconfig*.json ./
+COPY src ./src
 RUN yarn build
 
-# ---- runner ----
-FROM base AS runner
-ENV NODE_ENV=production
+# ---------- RUNNER ----------
+FROM node:20-alpine AS runner
 WORKDIR /app
-COPY --from=build /app/dist ./dist
-COPY --from=deps /app/node_modules ./node_modules
-COPY package.json ormconfig.js ./
+
+# Cliente pg para esperar la DB
+RUN apk add --no-cache postgresql-client
+
+# Instalar solo prod deps
+COPY package.json yarn.lock ./
+ENV NODE_ENV=production
+RUN yarn install --frozen-lockfile --production=true
+
+# Copiar compilado y ormconfig
+COPY --from=builder /app/dist ./dist
+COPY ormconfig.js ./ormconfig.js
+
 EXPOSE 5000
-CMD ["node", "dist/main"]
+
+# Esperar DB, correr migraciones (TypeORM 0.2.x) y arrancar API
+CMD sh -c '\
+    echo "⏳ Esperando base de datos..." && \
+    until pg_isready -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$DATABASE_USERNAME"; do sleep 2; done; \
+    echo "✅ DB lista, ejecutando migraciones..." && \
+    node ./node_modules/typeorm/cli.js migration:run && \
+    echo "🚀 Iniciando API..." && \
+    node dist/main.js \
+    '
