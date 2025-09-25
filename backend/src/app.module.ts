@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { ContentModule } from './content/content.module';
 import { CourseModule } from './course/course.module';
+import { HealthModule } from './health/health.module';
 import { StatsModule } from './stats/stats.module';
 import { UserModule } from './user/user.module';
 
@@ -17,6 +18,7 @@ import { UserModule } from './user/user.module';
     CourseModule,
     ContentModule,
     StatsModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [],
