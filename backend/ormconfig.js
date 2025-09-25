@@ -6,8 +6,9 @@ module.exports = {
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   entities: ['dist/**/*.entity.js'],
-  synchronize: false,
   migrations: ['dist/migrations/*.js'],
+  synchronize: false,
+  migrationsRun: true,
   logging: ['warn', 'error'],
   maxQueryExecutionTime: 100,
   extra: {
