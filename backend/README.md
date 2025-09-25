@@ -1,124 +1,223 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
-</p>
+# Urbano Backend (NestJS + TypeORM + JWT)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API del proyecto **Urbano** construida con **NestJS 7**, **TypeORM 0.2.x** y **PostgreSQL**. Incluye autenticación con **JWT**, **Swagger** en `/api/docs` y comandos de **migraciones** listos.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Stack
 
-# Backend - Nest React Admin
+- NestJS ^7.5.1
+- TypeORM ^0.2.32 + PostgreSQL (^8.6.0)
+- Autenticación: @nestjs/jwt, passport-jwt
+- Validación: class-validator, class-transformer
+- Seguridad: helmet, cookie-parser
+- Tests: Jest, Supertest, Newman (E2E)
 
-This is the backend service for the Nest React Admin project, built using the [NestJS](https://nestjs.com/) framework. It provides APIs for user authentication, content management, course handling, and statistics.
+## ✅ Requisitos
 
-Este es el servicio backend para el proyecto Nest React Admin, construido con el framework [NestJS](https://nestjs.com/). Proporciona APIs para autenticación de usuarios, gestión de contenido, manejo de cursos y estadísticas.
+- Node.js 14–18 (recomendado 18 LTS)
+- PostgreSQL 12+
+- Yarn 1.x o npm
 
-## Features / Características
-
-- **Authentication / Autenticación**: JWT-based authentication with role-based access control.
-  Autenticación basada en JWT con control de acceso basado en roles.
-- **Content Management / Gestión de Contenido**: APIs for managing content entities.
-  APIs para gestionar entidades de contenido.
-- **Course Management / Gestión de Cursos**: APIs for managing courses.
-  APIs para gestionar cursos.
-- **Statistics / Estadísticas**: APIs for retrieving and managing statistics.
-  APIs para recuperar y gestionar estadísticas.
-- **Swagger Documentation / Documentación Swagger**: Interactive API documentation available at `/api/docs` (in non-production environments).
-  Documentación interactiva de la API disponible en `/api/docs` (en entornos no productivos).
-- **Admin User Creation / Creación de Usuario Admin**: Automatically creates an admin user on first use if none exists.
-  Crea automáticamente un usuario administrador en el primer uso si no existe.
-
-## Project Structure / Estructura del Proyecto
-
-- **auth/**: Handles authentication and authorization.
-  Maneja la autenticación y autorización.
-- **content/**: Manages content-related entities and services.
-  Gestiona entidades y servicios relacionados con el contenido.
-- **course/**: Manages course-related entities and services.
-  Gestiona entidades y servicios relacionados con los cursos.
-- **stats/**: Handles statistics-related APIs.
-  Maneja las APIs relacionadas con estadísticas.
-- **user/**: Manages user-related entities and services.
-  Gestiona entidades y servicios relacionados con los usuarios.
-
-## Installation / Instalación
+## 📦 Instalación
 
 ```bash
-$ npm install
+yarn install
+# o
+npm install
 ```
 
-## Environment Variables / Variables de Entorno
+## 🔧 Scripts (del proyecto)
 
-The following environment variables are required for the application to run:
-Las siguientes variables de entorno son necesarias para que la aplicación funcione:
+```json
+{
+  "prebuild": "rimraf dist",
+  "build": "nest build",
+  "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+  "start": "nest start",
+  "start:dev": "nest start --watch",
+  "start:debug": "nest start --debug --watch",
+  "start:prod": "node dist/main",
+  "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+  "test": "jest",
+  "test:watch": "jest --watch",
+  "test:cov": "jest --coverage",
+  "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+  "test:e2e": "newman run e2e/app.e2e.v1.test.json",
+  "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+  "migration:gen": "yarn typeorm -f ormconfig.dev.js migration:generate -n InitSchema",
+  "migration:run": "node ./node_modules/typeorm/cli.js migration:run",
+  "migration:revert": "node ./node_modules/typeorm/cli.js migration:revert"
+}
+```
 
-- `PORT`: The port on which the server will run (default: 5000).
-  El puerto en el que se ejecutará el servidor (por defecto: 5000).
-- `NODE_ENV`: The environment mode (`development` or `production`).
-  El modo de entorno (`development` o `production`).
-- `COOKIE_SECRET`: Secret key for signing cookies.
-  Clave secreta para firmar cookies.
-- `CORS_ORIGINS`: Comma-separated list of allowed CORS origins.
-  Lista separada por comas de orígenes permitidos para CORS.
-- `ADMIN_USERNAME`: Default admin username.
-  Nombre de usuario administrador por defecto.
-- `ADMIN_PASSWORD`: Default admin password.
-  Contraseña de administrador por defecto.
-- `BCRYPT_ROUNDS`: Number of salt rounds for bcrypt (default: 12).
-  Número de rondas de sal para bcrypt (por defecto: 12).
+### Atajos útiles
 
-## Running the App / Ejecutando la Aplicación
+- **Desarrollo**: `yarn start:dev`
+- **Producción**: `yarn build && yarn start:prod`
+- **Linter**: `yarn lint`
+- **Pruebas**: `yarn test`, `yarn test:e2e`
+- **Migraciones**: `yarn migration:gen`, `yarn migration:run`, `yarn migration:revert`
+
+## 🔐 Variables de entorno (.env ejemplo)
+
+Crea un archivo `.env` en la raíz del backend con algo como:
+
+```
+# Servidor
+PORT=5000
+NODE_ENV=development
+COOKIE_SECRET=super-secret
+
+# JWT
+JWT_ACCESS_SECRET=change_me_access
+JWT_ACCESS_EXPIRES=15m
+JWT_REFRESH_SECRET=change_me_refresh
+JWT_REFRESH_EXPIRES=30d
+
+# Database
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_NAME=urbano
+DATABASE_USERNAME=postgres
+DATABASE_PASSWORD=postgres
+
+# CORS (lista separada por comas, vacía = permitir local cli)
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+
+# Admin bootstrap (opcional)
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+BCRYPT_ROUNDS=12
+```
+
+> Ajusta nombres/usuarios si usas Docker Compose (por ej. `DATABASE_HOST=urbano-db`).
+
+## ▶️ Ejecutar
 
 ```bash
-# development / desarrollo
-$ npm run start
+# Desarrollo (watch)
+yarn start:dev
 
-# watch mode / modo watch
-$ npm run start:dev
-
-# production mode / modo producción
-$ npm run start:prod
+# Producción
+yarn build
+yarn start:prod
 ```
 
-## Testing / Pruebas
+- Swagger (no prod): `http://localhost:${PORT:-5000}/api/docs`
+
+## 🗄️ Migraciones (TypeORM 0.2.x)
+
+Este repo usa CLI de TypeORM 0.2 con `ormconfig.dev.js`:
 
 ```bash
-# unit tests / pruebas unitarias
-$ npm run test
+# generar una nueva migración desde entidades
+yarn migration:gen
 
-# e2e tests / pruebas e2e
-$ npm run test:e2e
+# aplicar migraciones
+yarn migration:run
 
-# test coverage / cobertura de pruebas
-$ npm run test:cov
+# revertir última
+yarn migration:revert
 ```
 
-## Swagger Documentation / Documentación Swagger
+> Verifica la ruta de entidades y de salida en `ormconfig.dev.js` (debe apuntar a `dist/**/*.entity.js` tras `yarn build`).
 
-Swagger documentation is available at `/api/docs` when running in non-production environments.
-La documentación Swagger está disponible en `/api/docs` cuando se ejecuta en entornos no productivos.
+## 🧱 Salud del esquema
 
-## Admin User Creation / Creación de Usuario Admin
+- `synchronize=false` (recomendado para producción). Usa migraciones para cambios.
+- Genera entidades `.ts`, compila a `dist/*.js` y **luego** ejecuta `migration:gen` o `migration:run`.
 
-On the first run, the application will check if an admin user exists. If not, it will create one using the `ADMIN_USERNAME` and `ADMIN_PASSWORD` environment variables.
-En la primera ejecución, la aplicación verificará si existe un usuario administrador. Si no, creará uno utilizando las variables de entorno `ADMIN_USERNAME` y `ADMIN_PASSWORD`.
+## 🐳 Docker
 
-## License / Licencia
+El proyecto incluye un **Dockerfile** en `/mnt/data/dockerfile`. Flujo sugerido (usa la receta incluida):
 
-This project is [MIT licensed](LICENSE).
-Este proyecto está bajo la licencia [MIT](LICENSE).
+```dockerfile
+# ---------- BUILDER ----------
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Yarn ya viene, no lo reinstalamos
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+# Compilar a dist/
+COPY tsconfig*.json ./
+COPY src ./src
+RUN yarn build
+
+# ---------- RUNNER ----------
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+# Cliente pg para esperar la DB
+RUN apk add --no-cache postgresql-client
+
+# Instalar solo prod deps
+COPY package.json yarn.lock ./
+ENV NODE_ENV=production
+RUN yarn install --frozen-lockfile --production=true
+
+# Copiar compilado y ormconfig
+COPY --from=builder /app/dist ./dist
+COPY ormconfig.js ./ormconfig.js
+
+EXPOSE 5000
+
+# Esperar DB, correr migraciones (TypeORM 0.2.x) y arrancar API
+CMD sh -c '\
+    echo "⏳ Esperando base de datos..." && \
+    until pg_isready -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$DATABASE_USERNAME"; do sleep 2; done; \
+    echo "✅ DB lista, ejecutando migraciones..." && \
+    node ./node_modules/typeorm/cli.js migration:run && \
+    echo "🚀 Iniciando API..." && \
+    node dist/main.js \
+    '
+```
+
+### Build & run (imagen sola)
+
+```bash
+docker build -t urbano-backend .
+docker run --env-file .env --name urbano-backend -p 5000:5000 urbano-backend
+```
+
+> Si lo usas con `docker-compose`, ajusta `DATABASE_HOST` al **service name** de la base (p.ej. `urbano-db`) y expone `5000`.
+
+## 🔌 Integración con el Frontend
+
+- En **desarrollo**: el frontend (CRA) puede usar proxy a `http://localhost:5000`. Usa rutas `/api/...`.
+- En **producción**: sirve el frontend con Nginx y define un **reverse proxy** al backend (o usa compose con red interna).
+
+## 🧩 CORS y Cookies
+
+- El backend permite **CORS** con allowlist por `CORS_ORIGINS`.
+- Si usas cookies (refresh token), recuerda `credentials: true` en el cliente y `SameSite=None; Secure` cuando corresponda.
+
+## 🩹 Troubleshooting
+
+1. **No se generan migraciones**
+   - Asegúrate de **compilar** (`yarn build`) y que `ormconfig.dev.js` lea `dist/**/*.entity.js`.
+2. **`EntityMetadataNotFoundError`**
+   - Rutas de entidades incorrectas o `dist` desactualizado. Ejecuta `rimraf dist && yarn build`.
+3. **`connect ECONNREFUSED 127.0.0.1:5432` en Docker**
+   - Usa `DATABASE_HOST=urbano-db` (service name) dentro de compose, no `localhost`.
+4. **CORS bloquea requests**
+   - Agrega el origen exacto al `.env` en `CORS_ORIGINS` y reinicia.
+5. **JWT de refresco no persiste**
+   - Confirma hash y almacenamiento del `refreshToken`, y tiempos (`JWT_REFRESH_EXPIRES=30d`).
+
+## 📁 Estructura típica
+
+```
+src/
+  auth/
+  content/
+  course/
+  stats/
+  user/
+  main.ts
+  app.module.ts
+```
+
+## 📜 Licencia
+
+MIT (ajusta según tu preferencia).
