@@ -42,12 +42,36 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<LoginResponseDto> {
-    const refresh = request.cookies['refresh-token'];
+  async refresh(@Req() request: Request, @Res() response: Response) {
+    const rt = (request as any)?.cookies?.['refresh-token'];
+    if (!rt) {
+      return response.status(401).json({ message: 'No refresh token' });
+    }
 
-    return await this.authService.refresh(refresh, response);
+    try {
+      const result = await this.authService.refresh(rt, response);
+      if ((result as any)?.newRefreshToken) {
+        response.cookie('refresh-token', (result as any).newRefreshToken, {
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: false,
+          path: '/api',
+          maxAge: 7 * 24 * 3600 * 1000,
+        });
+      }
+
+      return response.json({ token: result.token, user: result.user });
+    } catch (e: any) {
+      response.clearCookie('refresh-token', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: false,
+        path: '/api',
+      });
+      const status = e?.status ?? 403;
+      return response
+        .status(status)
+        .json({ message: e?.message ?? 'Forbidden' });
+    }
   }
 }

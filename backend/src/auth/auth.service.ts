@@ -39,13 +39,21 @@ export class AuthService {
 
       const accessToken = await this.jwtService.signAsync(
         { username, firstName, lastName, role },
-        { subject: id, expiresIn: '15m', secret: this.SECRET },
+        {
+          subject: id,
+          expiresIn: process.env.JWT_ACCESS_EXPIRES || '15m',
+          secret: this.SECRET,
+        },
       );
 
       /* Generates a refresh token and stores it in a httponly cookie */
       const refreshToken = await this.jwtService.signAsync(
         { username, firstName, lastName, role },
-        { subject: id, expiresIn: '30d', secret: this.REFRESH_SECRET },
+        {
+          subject: id,
+          expiresIn: process.env.JWT_REFRESH_EXPIRES || '30d',
+          secret: this.REFRESH_SECRET,
+        },
       );
 
       await this.userService.setRefreshToken(id, refreshToken);
@@ -61,7 +69,6 @@ export class AuthService {
     }
   }
 
-  /* Because JWT is a stateless authentication, this function removes the refresh token from the cookies and the database */
   async logout(request: Request, response: Response): Promise<boolean> {
     try {
       const userId = request.user['userId'];
@@ -80,34 +87,47 @@ export class AuthService {
     refreshToken: string,
     response: Response,
   ): Promise<LoginResponseDto> {
-    const decoded = this.jwtService.decode(refreshToken);
-    const user = await this.userService.findById(decoded['sub']);
-    const { firstName, lastName, username, id, role } = user;
+    if (!refreshToken) {
+      throw new HttpException('Refresh token required', HttpStatus.BAD_REQUEST);
+    }
+
+    let userId: string | undefined;
 
     try {
-      if (!refreshToken) {
-        throw new HttpException(
-          'Refresh token required',
-          HttpStatus.BAD_REQUEST,
-        );
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.REFRESH_SECRET,
+      });
+      userId = payload?.sub;
+      if (!userId) {
+        throw new HttpException('Invalid payload', HttpStatus.UNAUTHORIZED);
       }
 
-      if (!(await bcrypt.compare(refreshToken, user.refreshToken))) {
-        response.clearCookie('refresh-token');
+      const user = await this.userService.findById(userId);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.UNAUTHORIZED);
+      }
+
+      if (!user.refreshToken) {
+        throw new HttpException(
+          'Refresh token is not valid',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+      const ok = await bcrypt.compare(refreshToken, user.refreshToken);
+      if (!ok) {
+        await this.userService.setRefreshToken(userId, null);
         throw new HttpException(
           'Refresh token is not valid',
           HttpStatus.FORBIDDEN,
         );
       }
 
-      if (!user.isActive) {
-        response.clearCookie('refresh-token');
+      if (user.isActive === false) {
+        await this.userService.setRefreshToken(userId, null);
         throw new HttpException('Account is disabled', HttpStatus.UNAUTHORIZED);
       }
 
-      await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.REFRESH_SECRET,
-      });
+      const { firstName, lastName, username, id, role } = user;
       const accessToken = await this.jwtService.signAsync(
         { username, firstName, lastName, role },
         { subject: id, expiresIn: '15m', secret: this.SECRET },
@@ -115,10 +135,29 @@ export class AuthService {
 
       return { token: accessToken, user };
     } catch (error) {
-      response.clearCookie('refresh-token');
-      await this.userService.setRefreshToken(id, null);
+      response?.clearCookie?.('refresh-token', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: false,
+        path: '/api',
+      });
+
+      if (userId) {
+        try {
+          await this.userService.setRefreshToken(userId, null);
+        } catch (e) {
+          throw new HttpException(
+            'AuthService.refresh setting null RT message: ' +
+              ((e as any)?.message ?? 'Forbidden'),
+            HttpStatus.FORBIDDEN,
+          );
+        }
+      }
+
       throw new HttpException(
-        `AuthService.refresh message: ${error.message}`,
+        `AuthService.refresh message: ${
+          (error as any)?.message ?? 'Forbidden'
+        }`,
         HttpStatus.FORBIDDEN,
       );
     }
