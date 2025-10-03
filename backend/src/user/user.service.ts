@@ -1,13 +1,17 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { ILike } from 'typeorm';
+import { Repository } from 'typeorm';
 
-import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto, UsersListQueryDto } from './user.dto';
 import { User } from './user.entity';
-import { UserQuery } from './user.query';
 
 @Injectable()
 export class UserService {
+  constructor(
+    @InjectRepository(User) private readonly repo: Repository<User>,
+  ) {}
+
   async save(createUserDto: CreateUserDto): Promise<User> {
     try {
       const user = await this.findByUsername(createUserDto.username);
@@ -30,27 +34,46 @@ export class UserService {
     }
   }
 
-  async findAll(userQuery: UserQuery): Promise<User[]> {
-    try {
-      Object.keys(userQuery).forEach((key) => {
-        if (key !== 'role') {
-          userQuery[key] = ILike(`%${userQuery[key]}%`);
-        }
-      });
+  async findAll(dto: UsersListQueryDto) {
+    const { page, limit, q, role, sort, order } = dto;
 
-      return await User.find({
-        where: userQuery,
-        order: {
-          firstName: 'ASC',
-          lastName: 'ASC',
-        },
-      });
-    } catch (error) {
-      throw new HttpException(
-        `UserService.findAll message: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
+    const SORT_MAP: Record<string, string> = {
+      username: 'u.username',
+      firstName: 'u.firstName',
+      lastName: 'u.lastName',
+      role: 'u.role',
+      isActive: 'u.isActive',
+      createdAt: 'u.createdAt',
+    };
+    const sortColumn = SORT_MAP[sort] ?? 'u.createdAt';
+    const sortOrder = order.toUpperCase() as 'ASC' | 'DESC';
+
+    const qb = this.repo.createQueryBuilder('u');
+
+    if (q && q.trim()) {
+      const like = `%${q.trim()}%`;
+      qb.andWhere(
+        '(u.username ILIKE :like OR u.firstName ILIKE :like OR u.lastName ILIKE :like)',
+        { like },
       );
     }
+
+    if (role) {
+      qb.andWhere('u.role = :role', { role });
+    }
+
+    qb.orderBy(sortColumn, sortOrder);
+
+    const skip = (page - 1) * limit;
+    qb.skip(skip).take(limit);
+
+    const [rows, total] = await qb.getManyAndCount();
+    const data = rows.map(({ ...safe }) => safe);
+
+    return {
+      data,
+      meta: { page, limit, total },
+    };
   }
 
   async findById(id: string): Promise<User> {

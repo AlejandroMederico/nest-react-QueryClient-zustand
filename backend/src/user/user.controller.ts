@@ -12,6 +12,8 @@ import {
   Query,
   UseGuards,
   UseInterceptors,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
@@ -20,9 +22,13 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserGuard } from '../auth/guards/user.guard';
 import { Roles } from '../decorators/roles.decorator';
 import { Role } from '../enums/role.enum';
-import { CreateUserDto, UpdateUserDto } from './user.dto';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  UsersListQueryDto,
+  UsersListResponseDto,
+} from './user.dto';
 import { User } from './user.entity';
-import { UserQuery } from './user.query';
 import { UserService } from './user.service';
 
 @Controller('users')
@@ -42,7 +48,10 @@ export class UserController {
 
   @Get()
   @Roles(Role.Admin)
-  async findAll(@Query() userQuery: UserQuery): Promise<User[]> {
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async findAll(
+    @Query() userQuery: UsersListQueryDto,
+  ): Promise<UsersListResponseDto> {
     return await this.userService.findAll(userQuery);
   }
 
