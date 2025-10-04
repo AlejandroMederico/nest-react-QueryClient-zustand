@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import React from 'react';
 import { AlertTriangle, Edit2, Loader, Trash2, X } from 'react-feather';
+import { useWatch } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
 
+import { useDeleteUser, useUpdateUser } from '../../features/users/users.hooks';
+import type { UsersListParams } from '../../lib/queryKeys';
 import type UpdateUserRequest from '../../models/user/UpdateUserRequest';
 import type User from '../../models/user/User';
-import useUserStore from '../../store/userStore';
 import { toErrorMessage } from '../../utils/errors';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
@@ -14,18 +16,27 @@ import TableItem from '../shared/TableItem';
 interface UsersTableProps {
   isLoading: boolean;
   users: User[];
+  visibleParams: UsersListParams;
+  total?: number;
+  onPageChange?: (n: number) => void;
 }
 
-export default function UsersTable({ isLoading, users }: UsersTableProps) {
+export default function UsersTable({
+  isLoading,
+  users,
+  visibleParams,
+  total,
+  onPageChange,
+}: UsersTableProps) {
   const [deleteShow, setDeleteShow] = useState(false);
   const [updateShow, setUpdateShow] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>();
   const [error, setError] = useState<string | null>(null);
 
-  const deleteUser = useUserStore((s) => s.deleteUser);
-  const updateUser = useUserStore((s) => s.updateUser);
-  const fetchUsers = useUserStore((s) => s.fetchUsers);
+  // ✅ Mutations (invalidan usando los params visibles)
+  const deleteM = useDeleteUser(visibleParams);
+  const updateM = useUpdateUser(visibleParams);
 
   const {
     register,
@@ -33,20 +44,19 @@ export default function UsersTable({ isLoading, users }: UsersTableProps) {
     formState: { isSubmitting },
     reset,
     setValue,
+    control,
   } = useForm<UpdateUserRequest>();
+  const isActiveValue = useWatch({ control, name: 'isActive' });
 
   const handleDelete = async () => {
     if (!selectedUserId) return;
     try {
       setIsDeleting(true);
-      await deleteUser(selectedUserId);
-      await fetchUsers();
+      await deleteM.mutateAsync(selectedUserId);
       setDeleteShow(false);
       setError(null);
-    } catch (e: any) {
-      setError(
-        e?.response?.data?.message ?? e?.message ?? 'Error deleting user',
-      );
+    } catch (e: unknown) {
+      setError(toErrorMessage(e, 'Error deleting user'));
     } finally {
       setIsDeleting(false);
     }
@@ -55,19 +65,22 @@ export default function UsersTable({ isLoading, users }: UsersTableProps) {
   const handleUpdate = async (payload: UpdateUserRequest) => {
     if (!selectedUserId) return;
     try {
+      const fixedPayload = {
+        ...payload,
+        isActive: Boolean(payload.isActive),
+      };
       const body = Object.fromEntries(
-        Object.entries(payload).filter(
+        Object.entries(fixedPayload).filter(
           ([, v]) => v !== undefined && String(v).trim() !== '',
         ),
       ) as UpdateUserRequest;
 
-      await updateUser(selectedUserId, body);
-      await fetchUsers();
+      await updateM.mutateAsync({ id: selectedUserId, payload: body });
       setUpdateShow(false);
       reset();
       setError(null);
     } catch (e: unknown) {
-      setError(toErrorMessage(e, 'Error deleting user'));
+      setError(toErrorMessage(e, 'Error updating user'));
     }
   };
 
@@ -107,6 +120,7 @@ export default function UsersTable({ isLoading, users }: UsersTableProps) {
                             setValue('isActive', isActive);
                             setUpdateShow(true);
                           }}
+                          aria-label="Edit user"
                         >
                           <Edit2 size={18} />
                         </button>
@@ -116,6 +130,7 @@ export default function UsersTable({ isLoading, users }: UsersTableProps) {
                             setSelectedUserId(id);
                             setDeleteShow(true);
                           }}
+                          aria-label="Delete user"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -131,6 +146,29 @@ export default function UsersTable({ isLoading, users }: UsersTableProps) {
             <h1>Empty</h1>
           </div>
         ) : null}
+
+        {/* Paginación */}
+        {typeof total === 'number' && onPageChange && (
+          <div className="flex justify-center my-4 gap-2">
+            {Array.from(
+              { length: Math.ceil(total / (visibleParams.limit || 10)) },
+              (_, i) => (
+                <button
+                  key={i + 1}
+                  className={`btn px-3 py-1 ${
+                    visibleParams.page === i + 1
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200'
+                  }`}
+                  onClick={() => onPageChange(i + 1)}
+                  disabled={visibleParams.page === i + 1}
+                >
+                  {i + 1}
+                </button>
+              ),
+            )}
+          </div>
+        )}
       </div>
 
       {/* Delete User Modal */}
@@ -234,6 +272,8 @@ export default function UsersTable({ isLoading, users }: UsersTableProps) {
               type="checkbox"
               className="input w-5 h-5"
               {...register('isActive')}
+              checked={!!isActiveValue}
+              onChange={(e) => setValue('isActive', e.target.checked)}
             />
           </div>
           <button className="btn" disabled={isSubmitting}>

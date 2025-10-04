@@ -4,3 +4,12 @@ export default interface UserQuery {
   username?: string;
   role?: string;
 }
+
+export type UsersListParams = {
+  page: number;
+  limit: number;
+  sort?: string;
+  order?: 'asc' | 'desc';
+  q?: string;
+  role?: string;
+};

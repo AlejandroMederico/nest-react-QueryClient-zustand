@@ -2,64 +2,57 @@ import { useEffect, useRef, useState } from 'react';
 import React from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
-import { shallow } from 'zustand/shallow';
 
 import Layout from '../components/layout';
 import Modal from '../components/shared/Modal';
 import UsersTable from '../components/users/UsersTable';
+import { useCreateUser, useUsersList } from '../features/users/users.hooks';
 import CreateUserRequest from '../models/user/CreateUserRequest';
-import useUserStore from '../store/userStore';
 import { toErrorMessage } from '../utils/errors';
 
 export default function Users() {
-  const [filtered, loading, error, setFilters, fetchUsers, addUser] =
-    useUserStore(
-      (s) => [
-        s.filtered,
-        s.loading,
-        s.error,
-        s.setFilters,
-        s.fetchUsers,
-        s.addUser,
-      ],
-      shallow,
-    );
-
-  // filtros UI
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
   const [role, setRole] = useState('');
 
-  const [addUserShow, setAddUserShow] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-
-  // 1) carga inicial (1 sola vez)
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-
-  // 2) al cambiar inputs -> solo actualiza filtros locales (sin API)
+  // Debounce para q (300ms)
+  const [q, setQ] = useState('');
   const timerRef = useRef<number | null>(null);
   useEffect(() => {
     if (timerRef.current) window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => {
-      setFilters({
-        firstName: firstName || undefined,
-        lastName: lastName || undefined,
-        username: username || undefined,
-        role: role || undefined,
-      });
+      const terms = [firstName, lastName, username].filter(Boolean).join(' ');
+      setQ(terms);
       timerRef.current = null;
-    }, 150) as unknown as number;
-
+    }, 300) as unknown as number;
     return () => {
       if (timerRef.current) {
         window.clearTimeout(timerRef.current);
         timerRef.current = null;
       }
     };
-  }, [firstName, lastName, username, role, setFilters]);
+  }, [firstName, lastName, username]);
+
+  // --- Params server-side ---
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const params = {
+    page,
+    limit,
+    sort: 'createdAt',
+    order: 'desc' as const,
+    q,
+    role,
+  };
+
+  // --- Data + Mutations ---
+  const { data, isFetching, isError, error, refetch } = useUsersList(params);
+  const createM = useCreateUser(params);
+
+  // --- Modal "Add" ---
+  const [addUserShow, setAddUserShow] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const {
     register,
@@ -68,9 +61,9 @@ export default function Users() {
     reset,
   } = useForm<CreateUserRequest>();
 
-  const saveUser = async (createUserRequest: CreateUserRequest) => {
+  const saveUser = async (payload: CreateUserRequest) => {
     try {
-      await addUser(createUserRequest); // re-sync con backend una vez
+      await createM.mutateAsync(payload);
       setAddUserShow(false);
       setFormError(null);
       reset();
@@ -83,12 +76,14 @@ export default function Users() {
     <Layout>
       <h1 className="font-semibold text-3xl mb-5">Manage Users</h1>
       <hr />
-      <button
-        className="btn my-5 flex gap-2 w-full sm:w-auto justify-center"
-        onClick={() => setAddUserShow(true)}
-      >
-        <Plus /> Add User
-      </button>
+      <div className="my-5 flex gap-2 w-full sm:w-auto">
+        <button className="btn flex gap-2" onClick={() => setAddUserShow(true)}>
+          <Plus /> Add User
+        </button>
+        <button className="btn" onClick={() => refetch()} disabled={isFetching}>
+          {isFetching ? 'Updating…' : 'Actualizar'}
+        </button>
+      </div>
 
       {/* Filtros */}
       <div className="table-filter mt-2">
@@ -129,7 +124,19 @@ export default function Users() {
         </div>
       </div>
 
-      <UsersTable isLoading={loading} users={filtered} />
+      {/* Tabla */}
+      {isError && (
+        <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
+          {(error as Error).message}
+        </div>
+      )}
+      <UsersTable
+        isLoading={isFetching}
+        users={data?.data ?? []}
+        visibleParams={params}
+        total={data?.meta?.total ?? 0}
+        onPageChange={setPage}
+      />
 
       {/* Add User Modal */}
       <Modal show={addUserShow}>
@@ -203,14 +210,9 @@ export default function Users() {
               'Save'
             )}
           </button>
-          {formError ? (
+          {formError && (
             <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
               {formError}
-            </div>
-          ) : null}
-          {error && (
-            <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
-              {error}
             </div>
           )}
         </form>
