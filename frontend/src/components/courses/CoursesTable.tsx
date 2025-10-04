@@ -16,11 +16,19 @@ import TableItem from '../shared/TableItem';
 interface CoursesTableProps {
   courses: Course[];
   isLoading: boolean;
+  total: number;
+  page: number;
+  limit: number;
+  onPageChange: (n: number) => void;
 }
 
 export default function CoursesTable({
   courses,
   isLoading,
+  total,
+  page,
+  limit,
+  onPageChange,
 }: CoursesTableProps) {
   const { authenticatedUser } = useAuth();
 
@@ -126,6 +134,23 @@ export default function CoursesTable({
           </div>
         ) : null}
       </div>
+      {/* Paginación */}
+      {typeof total === 'number' && total > limit && (
+        <div className="flex justify-center my-4 gap-2">
+          {Array.from({ length: Math.ceil(total / limit) }, (_, i) => (
+            <button
+              key={i + 1}
+              className={`btn px-3 py-1 ${
+                page === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'
+              }`}
+              onClick={() => onPageChange(i + 1)}
+              disabled={page === i + 1}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Delete Course Modal */}
       <Modal show={deleteShow}>

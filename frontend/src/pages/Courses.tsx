@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { shallow } from 'zustand/shallow';
@@ -15,32 +14,45 @@ import { toErrorMessage } from '../utils/errors';
 export default function Courses() {
   const { authenticatedUser } = useAuth();
 
-  const [courses, loading, error, setFilters, fetchCourses, addCourse] =
-    useCourseStore(
-      (_state) => [
-        _state.filtered,
-        _state.loading,
-        _state.error,
-        _state.setFilters,
-        _state.fetchCourses,
-        _state.addCourse,
-      ],
-      shallow,
-    );
+  const [
+    courses,
+    loading,
+    error,
+    filters,
+    page,
+    limit,
+    total,
+    setFilters,
+    setPage,
+    fetchCourses,
+    addCourse,
+  ] = useCourseStore(
+    (_state) => [
+      _state.courses,
+      _state.loading,
+      _state.error,
+      _state.filters,
+      _state.page,
+      _state.limit,
+      _state.total,
+      _state.setFilters,
+      _state.setPage,
+      _state.fetchCourses,
+      _state.addCourse,
+    ],
+    shallow,
+  );
 
-  // filtros UI (solo tocan el store; no API)
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-
+  const [name, setName] = useState(filters.name ?? '');
+  const [description, setDescription] = useState(filters.description ?? '');
   const [addCourseShow, setAddCourseShow] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Carga inicial (una vez)
   useEffect(() => {
     fetchCourses();
-  }, [fetchCourses]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, page, limit]);
 
-  // Debounce corto para filtros locales
   const timerRef = useRef<number | null>(null);
   useEffect(() => {
     if (timerRef.current) window.clearTimeout(timerRef.current);
@@ -50,7 +62,7 @@ export default function Courses() {
         description: description || undefined,
       });
       timerRef.current = null;
-    }, 150) as unknown as number;
+    }, 300) as unknown as number;
 
     return () => {
       if (timerRef.current) {
@@ -60,7 +72,6 @@ export default function Courses() {
     };
   }, [name, description, setFilters]);
 
-  // form crear curso
   const {
     register,
     handleSubmit,
@@ -92,7 +103,6 @@ export default function Courses() {
         </button>
       ) : null}
 
-      {/* Filtros */}
       <div className="table-filter">
         <div className="flex flex-row gap-5">
           <input
@@ -112,9 +122,15 @@ export default function Courses() {
         </div>
       </div>
 
-      <CoursesTable courses={courses} isLoading={loading} />
+      <CoursesTable
+        courses={courses}
+        isLoading={loading}
+        total={total}
+        page={page}
+        limit={limit}
+        onPageChange={setPage}
+      />
 
-      {/* Add Course Modal */}
       <Modal show={addCourseShow}>
         <div className="flex">
           <h1 className="font-semibold mb-3">Add Course</h1>

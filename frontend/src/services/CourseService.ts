@@ -15,13 +15,19 @@ class CourseService {
     }
   }
 
-  async findAll(courseQuery: CourseQuery): Promise<Course[]> {
+  async findAll(courseQuery: CourseQuery): Promise<{
+    data: Course[];
+    meta: { page: number; limit: number; total: number };
+  }> {
     try {
       return (
-        await apiService.get<Course[]>('/courses', { params: courseQuery })
+        await apiService.get<{
+          data: Course[];
+          meta: { page: number; limit: number; total: number };
+        }>('/courses', { params: courseQuery })
       ).data;
     } catch (e: unknown) {
-      const msg = toErrorMessage(e, 'Error fetching courses');
+      const msg = toErrorMessage(e, 'Error findAll courses');
       throw Object.assign(new Error(msg), {
         op: 'findAll',
         entity: 'course',

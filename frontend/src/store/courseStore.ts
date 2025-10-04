@@ -8,65 +8,54 @@ import { courseService } from '../services/CourseService';
 import { toErrorMessage } from '../utils/errors';
 
 type State = {
-  all: Course[];
-  filtered: Course[];
+  courses: Course[];
   loading: boolean;
   error: string | null;
   filters: CourseQuery;
+  page: number;
+  limit: number;
+  total: number;
 };
 
 type Actions = {
   setFilters: (partial: CourseQuery) => void;
+  setPage: (page: number) => void;
   fetchCourses: () => Promise<void>;
   addCourse: (payload: CreateCourseRequest) => Promise<void>;
   updateCourse: (id: string, payload: UpdateCourseRequest) => Promise<void>;
   deleteCourse: (id: string) => Promise<void>;
 };
 
-const applyLocalFilter = (
-  items: Course[],
-  elementFiltered: CourseQuery,
-): Course[] => {
-  const name = (elementFiltered.name ?? '').trim().toLowerCase();
-  const description = (elementFiltered.description ?? '').trim().toLowerCase();
-
-  return items.filter((course) => {
-    const okName = name ? `${course.name}`.toLowerCase().includes(name) : true;
-    const okDesc = description
-      ? `${course.description}`.toLowerCase().includes(description)
-      : true;
-    return okName && okDesc;
-  });
-};
-
-// Ordena la lista de cursos por nombre asc (mutando una copia)
-const sortCourses = (items: Course[]) =>
-  items.slice().sort((a, b) => a.name.localeCompare(b.name));
-
 const useCourseStore = createWithEqualityFn<State & Actions>()((set, get) => ({
-  all: [],
-  filtered: [],
+  courses: [],
   loading: false,
   error: null,
   filters: {},
+  page: 1,
+  limit: 10,
+  total: 0,
 
   setFilters(partial) {
-    set((_state) => {
-      const nextFilters = { ..._state.filters, ...partial };
-      const nextFiltered = sortCourses(
-        applyLocalFilter(_state.all, nextFilters),
-      );
-      return { filters: nextFilters, filtered: nextFiltered };
-    });
+    set((state) => ({ filters: { ...state.filters, ...partial }, page: 1 }));
+    get().fetchCourses();
+  },
+
+  setPage(page) {
+    set({ page });
+    get().fetchCourses();
   },
 
   async fetchCourses() {
     set({ loading: true, error: null });
     try {
-      const data = await courseService.findAll({});
-      const sorted = sortCourses(data);
-      const filtered = applyLocalFilter(sorted, get().filters);
-      set({ all: sorted, filtered, loading: false });
+      const { filters, page, limit } = get();
+      const params = { ...filters, page, limit };
+      const res = await courseService.findAll(params);
+      set({
+        courses: res.data,
+        total: res.meta.total,
+        loading: false,
+      });
     } catch (e: unknown) {
       set((s) => ({
         ...s,
@@ -79,50 +68,46 @@ const useCourseStore = createWithEqualityFn<State & Actions>()((set, get) => ({
   async addCourse(payload) {
     set({ loading: true, error: null });
     try {
-      if (Object.keys(payload).length === 0) {
-        set({ loading: false, error: 'No fields to add' });
-        return;
-      }
       await courseService.save(payload);
       await get().fetchCourses();
     } catch (e: unknown) {
-      set((s) => ({ ...s, loading: false }));
-      throw e;
+      set((s) => ({
+        ...s,
+        loading: false,
+        error: toErrorMessage(e, 'Error creating course'),
+      }));
     }
+    set({ loading: false });
   },
 
   async updateCourse(id, payload) {
     set({ loading: true, error: null });
     try {
-      if (!id) {
-        set({ loading: false, error: 'Course ID is required' });
-        return;
-      }
-      if (Object.keys(payload).length === 0) {
-        set({ loading: false, error: 'No fields to update' });
-        return;
-      }
       await courseService.update(id, payload);
       await get().fetchCourses();
     } catch (e: unknown) {
-      set((s) => ({ ...s, loading: false }));
-      throw e;
+      set((s) => ({
+        ...s,
+        loading: false,
+        error: toErrorMessage(e, 'Error updating course'),
+      }));
     }
+    set({ loading: false });
   },
 
   async deleteCourse(id) {
     set({ loading: true, error: null });
     try {
-      if (!id) {
-        set({ loading: false, error: 'Course ID is required' });
-        return;
-      }
       await courseService.delete(id);
       await get().fetchCourses();
     } catch (e: unknown) {
-      set((s) => ({ ...s, loading: false }));
-      throw e;
+      set((s) => ({
+        ...s,
+        loading: false,
+        error: toErrorMessage(e, 'Error deleting course'),
+      }));
     }
+    set({ loading: false });
   },
 }));
 
