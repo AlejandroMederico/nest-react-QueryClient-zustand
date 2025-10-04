@@ -41,7 +41,7 @@ export class CourseController {
   }
 
   @Get()
-  async findAll(@Query() courseQuery: CourseQuery): Promise<Course[]> {
+  async findAll(@Query() courseQuery: CourseQuery) {
     return await this.courseService.findAll(courseQuery);
   }
 
@@ -78,7 +78,7 @@ export class CourseController {
   async findAllContentsByCourseId(
     @Param('id') id: string,
     @Query() contentQuery: ContentQuery,
-  ): Promise<Content[]> {
+  ) {
     return await this.contentService.findAllByCourseId(id, contentQuery);
   }
 

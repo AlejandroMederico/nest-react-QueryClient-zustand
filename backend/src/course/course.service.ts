@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ILike } from 'typeorm';
 
 import { CreateCourseDto, UpdateCourseDto } from './course.dto';
 import { Course } from './course.entity';
@@ -21,18 +20,28 @@ export class CourseService {
     }
   }
 
-  async findAll(courseQuery: CourseQuery): Promise<Course[]> {
+  async findAll(dto: CourseQuery) {
     try {
-      Object.keys(courseQuery).forEach((key) => {
-        courseQuery[key] = ILike(`%${courseQuery[key]}%`);
-      });
-      return await Course.find({
-        where: courseQuery,
-        order: {
-          name: 'ASC',
-          description: 'ASC',
-        },
-      });
+      const { page, limit, sort, order, name, description } = dto;
+      const qb = Course.createQueryBuilder('c');
+      if (name) {
+        qb.andWhere('c.name ILIKE :name', { name: `%${name}%` });
+      }
+      if (description) {
+        qb.andWhere('c.description ILIKE :description', {
+          description: `%${description}%`,
+        });
+      }
+      const sortColumn = sort ?? 'c.dateCreated';
+      const sortOrder = (order ?? 'desc').toUpperCase() as 'ASC' | 'DESC';
+      qb.orderBy(`c.${sortColumn}`, sortOrder);
+      const skip = (page - 1) * limit;
+      qb.skip(skip).take(limit);
+      const [rows, total] = await qb.getManyAndCount();
+      return {
+        data: rows,
+        meta: { page, limit, total },
+      };
     } catch (error) {
       throw new HttpException(
         `CourseService.findAll: ${error.message}`,
