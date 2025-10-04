@@ -1,5 +1,5 @@
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
-import shallow from 'zustand/shallow';
+import { shallow } from 'zustand/shallow';
 import { createWithEqualityFn } from 'zustand/traditional';
 
 import type Content from '../models/content/Content';
@@ -10,9 +10,11 @@ import { contentService } from '../services/ContentService';
 import { toErrorMessage } from '../utils/errors';
 
 type CourseBucket = {
-  all: Content[];
-  filtered: Content[];
+  contents: Content[];
   filters: ContentQuery;
+  page: number;
+  limit: number;
+  total: number;
   loading: boolean;
   error: string | null;
 };
@@ -23,6 +25,8 @@ type State = {
 
 type Actions = {
   setFilters: (courseId: string, partial: ContentQuery) => void;
+  setPage: (courseId: string, page: number) => void;
+  setLimit: (courseId: string, limit: number) => void;
   fetchContents: (courseId: string) => Promise<void>;
   addContent: (
     courseId: string,
@@ -37,42 +41,14 @@ type Actions = {
 };
 
 const emptyBucket: CourseBucket = Object.freeze({
-  all: [],
-  filtered: [],
+  contents: [],
   filters: {},
+  page: 1,
+  limit: 10,
+  total: 0,
   loading: false,
   error: null,
 });
-
-const sortContents = (items: Content[]) =>
-  items
-    .slice()
-    .sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
-    );
-
-const applyLocalFilter = (items: Content[], query: ContentQuery) => {
-  const name = (query.name ?? '').trim().toLowerCase();
-  const description = (query.description ?? '').trim().toLowerCase();
-
-  return items.filter((c) => {
-    const okName = name
-      ? String(c.name ?? '')
-          .toLowerCase()
-          .includes(name)
-      : true;
-    const okDesc = description
-      ? String(c.description ?? '')
-          .toLowerCase()
-          .includes(description)
-      : true;
-    return okName && okDesc;
-  });
-};
-
-const deriveFiltered = (all: Content[], filters: ContentQuery) =>
-  sortContents(applyLocalFilter(all, filters));
-
 const ensureCourseId = (courseId: string) => {
   if (!courseId) throw new Error('Course ID is required');
 };
@@ -82,26 +58,27 @@ const ensurePayload = (payload: object, what = 'payload') => {
     throw new Error(`No fields to ${what}`);
 };
 
-// Helpers de mutación focalizados por curso
 const updateCourse = (
-  s: State,
+  _state: State,
   courseId: string,
   updater: (prev: CourseBucket) => CourseBucket,
 ): State => {
-  const prev = s.byCourse[courseId] ?? emptyBucket;
+  const prev = _state.byCourse[courseId] ?? emptyBucket;
   return {
-    ...s,
+    ..._state,
     byCourse: {
-      ...s.byCourse,
+      ..._state.byCourse,
       [courseId]: updater(prev),
     },
   };
 };
 
 const ensureBucket = (prev: CourseBucket): CourseBucket => ({
-  all: prev.all ?? [],
-  filtered: prev.filtered ?? [],
+  contents: prev.contents ?? [],
   filters: prev.filters ?? {},
+  page: prev.page ?? 1,
+  limit: prev.limit ?? 10,
+  total: prev.total ?? 0,
   loading: prev.loading ?? false,
   error: prev.error ?? null,
 });
@@ -117,39 +94,66 @@ const useContentStore = createWithEqualityFn<State & Actions>()(
           updateCourse(state, courseId, (prev0) => {
             const prev = ensureBucket(prev0);
             const nextFilters = { ...prev.filters, ...partial };
-            const nextFiltered = deriveFiltered(prev.all, nextFilters);
             return {
               ...prev,
               filters: nextFilters,
-              filtered: nextFiltered,
+              page: 1, // reset page on filter change
               error: null,
             };
           }),
         );
       },
 
+      setPage(courseId, page) {
+        ensureCourseId(courseId);
+        set((state) =>
+          updateCourse(state, courseId, (prev0) => ({
+            ...ensureBucket(prev0),
+            page,
+          })),
+        );
+        get().fetchContents(courseId);
+      },
+
+      setLimit(courseId, limit) {
+        ensureCourseId(courseId);
+        set((state) =>
+          updateCourse(state, courseId, (prev0) => ({
+            ...ensureBucket(prev0),
+            limit,
+            page: 1,
+          })),
+        );
+        get().fetchContents(courseId);
+      },
+
       async fetchContents(courseId) {
         ensureCourseId(courseId);
 
-        // flag de loading por curso
         set((state) =>
-          updateCourse(state, courseId, (prev0) => {
-            const prev = ensureBucket(prev0);
-            return { ...prev, loading: true, error: null };
-          }),
+          updateCourse(state, courseId, (prev0) => ({
+            ...ensureBucket(prev0),
+            loading: true,
+            error: null,
+          })),
         );
 
         try {
-          const data = await contentService.findAll(courseId, {});
-          const all = sortContents(data);
-          const filters = get().byCourse[courseId]?.filters ?? {};
-          const filtered = applyLocalFilter(all, filters);
-
+          const bucket = get().byCourse[courseId] ?? emptyBucket;
+          const { filters, page, limit } = bucket;
+          const { data, meta } = await contentService.findAll(courseId, {
+            ...filters,
+            page,
+            limit,
+          });
           set((state) =>
-            updateCourse(state, courseId, () => ({
-              all,
-              filtered,
+            updateCourse(state, courseId, (prev0) => ({
+              ...ensureBucket(prev0),
+              contents: data,
               filters,
+              page: meta?.page ?? 1,
+              limit: meta?.limit ?? 10,
+              total: meta?.total ?? data.length,
               loading: false,
               error: null,
             })),
@@ -157,10 +161,11 @@ const useContentStore = createWithEqualityFn<State & Actions>()(
         } catch (e: unknown) {
           const msg = toErrorMessage(e, 'Error fetching contents');
           set((state) =>
-            updateCourse(state, courseId, (prev0) => {
-              const prev = ensureBucket(prev0);
-              return { ...prev, loading: false, error: msg };
-            }),
+            updateCourse(state, courseId, (prev0) => ({
+              ...ensureBucket(prev0),
+              loading: false,
+              error: msg,
+            })),
           );
         }
       },
@@ -261,7 +266,7 @@ export const selectBucket =
   (s: State): CourseBucket =>
     s.byCourse[courseId] ?? emptyBucket;
 
-export const selectFiltered = (courseId: string) => (s: State) =>
-  (s.byCourse[courseId]?.filtered ?? []) as Content[];
+export const selectContents = (courseId: string) => (s: State) =>
+  (s.byCourse[courseId]?.contents ?? []) as Content[];
 
 export { shallow };

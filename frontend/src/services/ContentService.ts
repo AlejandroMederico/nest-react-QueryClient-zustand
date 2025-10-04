@@ -19,13 +19,19 @@ class ContentService {
     }
   }
 
-  async findAll(courseId: string, query: ContentQuery): Promise<Content[]> {
+  async findAll(
+    courseId: string,
+    query: ContentQuery & { page?: number; limit?: number },
+  ): Promise<{
+    data: Content[];
+    meta: { page: number; limit: number; total: number };
+  }> {
     try {
-      const { data } = await apiService.get<Content[]>(
-        `/courses/${courseId}/contents`,
-        { params: query },
-      );
-      return data;
+      const response = await apiService.get<{
+        data: Content[];
+        meta: { page: number; limit: number; total: number };
+      }>(`/courses/${courseId}/contents`, { params: query });
+      return { data: response.data.data, meta: response.data.meta };
     } catch (e: unknown) {
       const msg = toErrorMessage(e, 'Error fetching contents');
       throw Object.assign(new Error(msg), {

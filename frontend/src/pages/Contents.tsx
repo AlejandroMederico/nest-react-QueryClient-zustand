@@ -3,6 +3,7 @@ import React from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router';
+import { useHistory } from 'react-router-dom';
 import { shallow } from 'zustand/shallow';
 
 import ContentsTable from '../components/content/ContentsTable';
@@ -15,49 +16,50 @@ import useContentStore from '../store/contentStore';
 import { toErrorMessage } from '../utils/errors';
 
 export default function Course() {
+  const history = useHistory();
   const { id: courseId } = useParams<{ id: string }>();
   const { authenticatedUser } = useAuth();
-
-  const [bucket, setFilters, fetchContents, addContent] = useContentStore(
-    (s) => [
-      s.byCourse[courseId ?? ''],
-      s.setFilters,
-      s.fetchContents,
-      s.addContent,
-    ],
-    shallow,
-  );
-
+  const [courseName, setCourseName] = useState('');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [addContentShow, setAddContentShow] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const timerRef = useRef<number | null>(null);
+  const [bucket, setFilters, setPage, fetchContents, addContent] =
+    useContentStore(
+      (s) => [
+        s.byCourse[courseId ?? ''],
+        s.setFilters,
+        s.setPage,
+        s.fetchContents,
+        s.addContent,
+      ],
+      shallow,
+    );
   const loading = bucket?.loading ?? false;
   const error = bucket?.error ?? null;
-  const contents = bucket?.filtered ?? [];
+  const contents = bucket?.contents ?? [];
+  const page = bucket?.page ?? 1;
+  const limit = bucket?.limit ?? 10;
+  const total = bucket?.total ?? 0;
 
-  // Para el título (nombre del curso): dejamos el fetch directo
-  const [courseName, setCourseName] = useState('');
   useEffect(() => {
     let mounted = true;
     (async () => {
       if (!courseId) return;
-      const c = await courseService.findOne(courseId);
-      if (mounted) setCourseName(c?.name ?? '');
+      const _course = await courseService.findOne(courseId);
+      if (mounted) setCourseName(_course?.name ?? '');
     })();
     return () => {
       mounted = false;
     };
   }, [courseId]);
 
-  // carga inicial
   useEffect(() => {
     if (!courseId) return;
     fetchContents(courseId);
   }, [courseId, fetchContents]);
 
-  // filtros UI locales
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-
-  // debounce corto para aplicar filtros al store (sin API)
-  const timerRef = useRef<number | null>(null);
   useEffect(() => {
     if (!courseId) return;
     if (timerRef.current) window.clearTimeout(timerRef.current);
@@ -67,7 +69,7 @@ export default function Course() {
         description: description || undefined,
       });
       timerRef.current = null;
-    }, 150) as unknown as number;
+    }, 300) as unknown as number;
 
     return () => {
       if (timerRef.current) {
@@ -76,10 +78,6 @@ export default function Course() {
       }
     };
   }, [courseId, name, description, setFilters]);
-
-  // modal crear
-  const [addContentShow, setAddContentShow] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
 
   const {
     register,
@@ -91,7 +89,7 @@ export default function Course() {
   const saveContent = async (req: CreateContentRequest) => {
     try {
       if (!courseId) return;
-      await addContent(courseId, req); // re-sync luego de crear
+      await addContent(courseId, req);
       setAddContentShow(false);
       setFormError(null);
       reset();
@@ -106,14 +104,24 @@ export default function Course() {
         {courseName ? `${courseName} Contents` : ''}
       </h1>
       <hr />
-      {authenticatedUser.role !== 'user' ? (
-        <button
-          className="btn my-5 flex gap-2 w-full sm:w-auto justify-center"
-          onClick={() => setAddContentShow(true)}
-        >
-          <Plus /> Add Content
-        </button>
-      ) : null}
+      <div className="flex flex-row gap-3 my-5">
+        {authenticatedUser.role !== 'user' ? (
+          <>
+            <button
+              className="btn flex gap-2 w-full sm:w-auto justify-center"
+              onClick={() => history.push('/courses')}
+            >
+              ← Back
+            </button>
+            <button
+              className="btn flex gap-2 w-full sm:w-auto justify-center"
+              onClick={() => setAddContentShow(true)}
+            >
+              <Plus /> Add Content
+            </button>
+          </>
+        ) : null}
+      </div>
 
       <div className="table-filter">
         <div className="flex flex-row gap-5">
@@ -138,6 +146,10 @@ export default function Course() {
         contents={contents}
         isLoading={loading}
         courseId={courseId!}
+        total={total}
+        page={page}
+        limit={limit}
+        onPageChange={(p) => setPage(courseId!, p)}
       />
 
       {/* Add Content Modal */}

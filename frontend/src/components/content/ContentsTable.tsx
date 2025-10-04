@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { AlertTriangle, Edit2, Loader, Trash2, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 
@@ -16,13 +15,21 @@ interface ContentsTableProps {
   contents: Content[];
   courseId: string;
   isLoading: boolean;
+  total: number;
+  page: number;
+  limit: number;
+  onPageChange: (page: number) => void;
 }
 
-export default function ContentsTable({
+const ContentsTable: React.FC<ContentsTableProps> = ({
   contents,
-  isLoading,
   courseId,
-}: ContentsTableProps) {
+  isLoading,
+  total,
+  page,
+  limit,
+  onPageChange,
+}) => {
   const { authenticatedUser } = useAuth();
 
   const deleteContent = useContentStore((s) => s.deleteContent);
@@ -43,12 +50,47 @@ export default function ContentsTable({
     setValue,
   } = useForm<UpdateContentRequest>();
 
-  const handleDelete = async () => {
+  const canEdit = useMemo(
+    () => ['admin', 'editor'].includes(authenticatedUser?.role ?? ''),
+    [authenticatedUser?.role],
+  );
+  const canDelete = useMemo(
+    () => authenticatedUser?.role === 'admin',
+    [authenticatedUser?.role],
+  );
+
+  const openUpdate = useCallback(
+    (c: Content) => {
+      setSelectedContentId(c.id);
+      setValue('name', c.name);
+      setValue('description', c.description ?? '');
+      setUpdateShow(true);
+    },
+    [setValue],
+  );
+
+  const openDelete = useCallback((id: string) => {
+    setSelectedContentId(id);
+    setDeleteShow(true);
+  }, []);
+
+  const closeUpdate = useCallback(() => {
+    setUpdateShow(false);
+    setError(null);
+    reset();
+  }, [reset]);
+
+  const closeDelete = useCallback(() => {
+    setDeleteShow(false);
+    setError(null);
+  }, []);
+
+  const handleDelete = useCallback(async () => {
     if (!selectedContentId) return;
     try {
       setIsDeleting(true);
       await deleteContent(courseId, selectedContentId);
-      await fetchContents(courseId); // re-sync una vez
+      await fetchContents(courseId);
       setDeleteShow(false);
       setError(null);
     } catch (e: unknown) {
@@ -56,170 +98,203 @@ export default function ContentsTable({
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [selectedContentId, courseId, deleteContent, fetchContents]);
 
-  const handleUpdate = async (payload: UpdateContentRequest) => {
-    if (!selectedContentId) return;
-    try {
-      const body = Object.fromEntries(
-        Object.entries(payload).filter(
-          ([, v]) => v !== undefined && String(v).trim() !== '',
-        ),
-      ) as UpdateContentRequest;
+  const handleUpdate = useCallback(
+    async (payload: UpdateContentRequest) => {
+      if (!selectedContentId) return;
+      try {
+        // Limpia campos vacíos/undefined para enviar solo cambios reales
+        const body = Object.fromEntries(
+          Object.entries(payload).filter(
+            ([, v]) => v !== undefined && String(v).trim() !== '',
+          ),
+        ) as UpdateContentRequest;
 
-      await updateContent(courseId, selectedContentId, body);
-      await fetchContents(courseId); // re-sync
-      setUpdateShow(false);
-      reset();
-      setError(null);
-    } catch (e: unknown) {
-      setError(toErrorMessage(e, 'Error updating content'));
-    }
-  };
+        await updateContent(courseId, selectedContentId, body);
+        await fetchContents(courseId);
+        closeUpdate();
+      } catch (e: unknown) {
+        setError(toErrorMessage(e, 'Error updating content'));
+      }
+    },
+    [selectedContentId, courseId, updateContent, fetchContents, closeUpdate],
+  );
 
   return (
     <>
       <div className="table-container">
-        <Table columns={['Name', 'Description', 'Created', 'Actions']}>
-          {isLoading
-            ? null
-            : contents.map(({ id, name, description, dateCreated }) => (
-                <tr key={id}>
-                  <TableItem>{name}</TableItem>
-                  <TableItem>{description}</TableItem>
-                  <TableItem>
-                    {new Date(dateCreated).toLocaleDateString()}
-                  </TableItem>
-                  <TableItem>
-                    {['admin', 'editor'].includes(authenticatedUser?.role) ? (
-                      <button
-                        className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
-                        onClick={() => {
-                          setSelectedContentId(id);
-                          setValue('name', name);
-                          setValue('description', description);
-                          setUpdateShow(true);
-                        }}
-                      >
-                        <Edit2 size={18} />
-                      </button>
-                    ) : null}
-                    {authenticatedUser?.role === 'admin' ? (
-                      <button
-                        className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
-                        onClick={() => {
-                          setSelectedContentId(id);
-                          setDeleteShow(true);
-                        }}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    ) : null}
-                  </TableItem>
-                </tr>
-              ))}
+        <Table columns={['Nombre', 'Descripción', 'Creado', 'Acciones']}>
+          {isLoading ? (
+            <tr>
+              <td colSpan={4} className="py-8 text-center text-gray-500">
+                Cargando…
+              </td>
+            </tr>
+          ) : contents.length > 0 ? (
+            contents.map((c) => (
+              <tr key={c.id}>
+                <TableItem>{c.name}</TableItem>
+                <TableItem>{c.description}</TableItem>
+                <TableItem>
+                  {c.dateCreated
+                    ? new Date(c.dateCreated).toLocaleDateString()
+                    : '—'}
+                </TableItem>
+                <TableItem>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      title="Editar"
+                      className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
+                      onClick={() => openUpdate(c)}
+                    >
+                      <Edit2 size={18} />
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      type="button"
+                      title="Eliminar"
+                      className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
+                      onClick={() => openDelete(c.id)}
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </TableItem>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={4} className="py-8 text-center text-gray-500">
+                Empty
+              </td>
+            </tr>
+          )}
         </Table>
+
         {!isLoading && contents.length < 1 ? (
           <div className="text-center my-5 text-gray-500">
             <h1>Empty</h1>
           </div>
         ) : null}
       </div>
-
-      {/* Delete Content Modal */}
-      <Modal show={deleteShow}>
-        <AlertTriangle size={30} className="text-red-500 mr-5 fixed" />
-        <div className="ml-10">
-          <h3 className="mb-2 font-semibold">Delete Content</h3>
-          <hr />
-          <p className="mt-2">
-            Are you sure you want to delete the content? All of content's data
-            will be permanently removed.
-            <br />
-            This action cannot be undone.
-          </p>
+      {/* Paginación */}
+      {typeof total === 'number' && total > limit && (
+        <div className="flex justify-center my-4 gap-2">
+          {Array.from({ length: Math.ceil(total / limit) }, (_, i) => (
+            <button
+              key={i + 1}
+              className={`btn px-3 py-1 ${
+                page === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'
+              }`}
+              onClick={() => onPageChange(i + 1)}
+              disabled={page === i + 1}
+            >
+              {i + 1}
+            </button>
+          ))}
         </div>
+      )}
+
+      {/* Modal Eliminar */}
+      <Modal show={deleteShow}>
+        <div className="flex items-start gap-3">
+          <AlertTriangle size={30} className="text-red-500 flex-shrink-0" />
+          <div>
+            <h3 className="mb-2 font-semibold">Eliminar contenido</h3>
+            <hr />
+            <p className="mt-2">
+              ¿Seguro que deseas eliminar este contenido? Esta acción no se
+              puede deshacer.
+            </p>
+          </div>
+        </div>
+
         <div className="flex flex-row gap-3 justify-end mt-5">
           <button
             className="btn"
-            onClick={() => {
-              setError(null);
-              setDeleteShow(false);
-            }}
+            onClick={closeDelete}
             disabled={isDeleting}
+            type="button"
           >
-            Cancel
+            Cancelar
           </button>
           <button
             className="btn danger"
             onClick={handleDelete}
             disabled={isDeleting}
+            type="button"
           >
             {isDeleting ? (
-              <Loader className="mx-auto animate-spin" />
+              <Loader
+                aria-label="Eliminando…"
+                className="mx-auto animate-spin"
+              />
             ) : (
-              'Delete'
+              'Eliminar'
             )}
           </button>
         </div>
-        {error ? (
-          <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
+
+        {error && (
+          <div className="mt-3 text-red-500 p-3 font-semibold border rounded-md bg-red-50">
             {error}
           </div>
-        ) : null}
+        )}
       </Modal>
 
-      {/* Update Content Modal */}
-      {selectedContentId ? (
-        <Modal show={updateShow}>
-          <div className="flex">
-            <h1 className="font-semibold mb-3">Update Content</h1>
-            <button
-              className="ml-auto focus:outline-none"
-              onClick={() => {
-                setUpdateShow(false);
-                setError(null);
-                reset();
-              }}
-            >
-              <X size={30} />
-            </button>
-          </div>
-          <hr />
-
-          <form
-            className="flex flex-col gap-5 mt-5"
-            onSubmit={handleSubmit(handleUpdate)}
+      {/* Modal Actualizar */}
+      <Modal show={updateShow}>
+        <div className="flex">
+          <h1 className="font-semibold mb-3">Actualizar contenido</h1>
+          <button
+            className="ml-auto focus:outline-none"
+            onClick={closeUpdate}
+            type="button"
+            aria-label="Cerrar"
+            title="Cerrar"
           >
-            <input
-              type="text"
-              className="input"
-              placeholder="Name"
-              required
-              {...register('name')}
-            />
-            <input
-              type="text"
-              className="input"
-              placeholder="Description"
-              required
-              {...register('description')}
-            />
-            <button className="btn" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <Loader className="animate-spin mx-auto" />
-              ) : (
-                'Save'
-              )}
-            </button>
-            {error ? (
-              <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
-                {error}
-              </div>
-            ) : null}
-          </form>
-        </Modal>
-      ) : null}
+            <X size={30} />
+          </button>
+        </div>
+        <hr />
+        <form
+          className="flex flex-col gap-5 mt-5"
+          onSubmit={handleSubmit(handleUpdate)}
+        >
+          <input
+            type="text"
+            className="input"
+            placeholder="Nombre"
+            required
+            {...register('name')}
+          />
+          <input
+            type="text"
+            className="input"
+            placeholder="Descripción"
+            required
+            {...register('description')}
+          />
+          <button className="btn" disabled={isSubmitting} type="submit">
+            {isSubmitting ? (
+              <Loader className="animate-spin mx-auto" />
+            ) : (
+              'Guardar'
+            )}
+          </button>
+
+          {error && (
+            <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
+              {error}
+            </div>
+          )}
+        </form>
+      </Modal>
     </>
   );
-}
+};
+
+export default ContentsTable;
