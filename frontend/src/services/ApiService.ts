@@ -1,56 +1,91 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 
-import { authService } from './AuthService';
+import authStore from '../store/authStore';
 
-const axiosInstance = axios.create({
+type RetriableConfig = AxiosRequestConfig & { _retry?: boolean };
+
+const api = axios.create({
   baseURL: '/api/v1',
   withCredentials: true,
 });
 
-let refreshPromise: Promise<string> | null = null;
+const authApi = axios.create({
+  baseURL: '/api/v1',
+  withCredentials: true,
+});
 
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const status = error.response?.status;
-    const originalRequest = error.config as AxiosRequestConfig & {
-      _retry?: boolean;
+function getToken() {
+  const store = authStore?.getState?.();
+  return store?.token ?? localStorage.getItem('token') ?? undefined;
+}
+
+function setToken(token?: string) {
+  const store = authStore?.getState?.();
+  store?.setToken?.(token);
+  if (token) {
+    localStorage.setItem('token', token);
+  } else {
+    localStorage.removeItem('token');
+  }
+}
+
+function isAuthUrl(url?: string) {
+  if (!url) return false;
+  return (
+    url.includes('/auth/login') ||
+    url.includes('/auth/refresh') ||
+    url.includes('/auth/logout')
+  );
+}
+
+// ----- Request: agrega Authorization -----
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token && !config.headers?.Authorization) {
+    config.headers = {
+      ...(config.headers || {}),
+      Authorization: `Bearer ${token}`,
     };
+  }
+  return config;
+});
 
-    const url = (originalRequest.url || '').toString();
-    const isAuthEndpoint =
-      url.includes('/auth/refresh') || url.includes('/auth/login');
+// ----- Response: maneja 401 con refresh + retry -----
+api.interceptors.response.use(
+  (res) => res,
+  async (error: AxiosError) => {
+    const resStatus = error.response?.status;
+    const erroConfig = error.config as RetriableConfig;
 
-    if (status === 401 && !originalRequest._retry && !isAuthEndpoint) {
-      originalRequest._retry = true;
-
+    if (
+      resStatus === 401 &&
+      erroConfig &&
+      !erroConfig._retry &&
+      !isAuthUrl(erroConfig.url)
+    ) {
+      erroConfig._retry = true;
       try {
-        if (!refreshPromise) {
-          refreshPromise = authService
-            .refresh()
-            .then((r) => r.token)
-            .finally(() => {
-              refreshPromise = null;
-            });
-        }
-        const token = await refreshPromise;
+        const { data } = await authApi.post('/auth/refresh');
+        const newToken = (data as any)?.token;
+        if (!newToken) throw new Error('No token in /auth/refresh');
 
-        axiosInstance.defaults.headers.Authorization = `Bearer ${token}`;
-        originalRequest.headers = {
-          ...(originalRequest.headers || {}),
-          Authorization: `Bearer ${token}`,
+        setToken(newToken);
+        erroConfig.headers = {
+          ...(erroConfig.headers || {}),
+          Authorization: `Bearer ${newToken}`,
         };
 
-        return axiosInstance(originalRequest);
+        return api(erroConfig);
       } catch (e) {
-        // opcional: redirigir a /login
-        // window.location.href = '/login';
-        return Promise.reject(e);
+        setToken(undefined);
+        const store = authStore?.getState?.();
+        store?.logout?.();
+        throw e;
       }
     }
 
-    return Promise.reject(error);
+    throw error;
   },
 );
 
-export default axiosInstance;
+export default api;

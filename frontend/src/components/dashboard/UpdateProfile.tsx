@@ -29,7 +29,7 @@ export default function UpdateProfile() {
       if (updateUserRequest.username === data.username) {
         delete updateUserRequest.username;
       }
-      await userService.update(authenticatedUser.id, updateUserRequest);
+      await userService.updateUser(authenticatedUser.id, updateUserRequest);
       setError(null);
       setValue('password', '');
       refetch();
