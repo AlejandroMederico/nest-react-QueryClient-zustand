@@ -1,4 +1,7 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+import { Content } from './content.entity';
 
 export class CreateContentDto {
   @IsNotEmpty()
@@ -20,4 +23,18 @@ export class UpdateContentDto {
   @IsNotEmpty()
   @IsString()
   description?: string;
+}
+
+export class ContentsListMetaDto {
+  @ApiProperty() page: number;
+  @ApiProperty() limit: number;
+  @ApiProperty() total: number;
+}
+
+export class ContentsListResponseDto {
+  @ApiProperty({ type: [Content] })
+  data: Content[];
+
+  @ApiProperty({ type: ContentsListMetaDto })
+  meta: ContentsListMetaDto;
 }
