@@ -10,7 +10,7 @@ import { authService } from '../services/AuthService';
 import useAuth from '../store/authStore';
 
 export default function Login() {
-  const { setAuthenticatedUser } = useAuth();
+  const { setAuthenticatedUser, setToken } = useAuth();
   const history = useHistory();
 
   const [error, setError] = useState<string>();
@@ -25,6 +25,7 @@ export default function Login() {
     try {
       const data = await authService.login(loginRequest);
       setAuthenticatedUser(data.user);
+      setToken(data.token);
       history.push('/');
     } catch (error) {
       const message =
