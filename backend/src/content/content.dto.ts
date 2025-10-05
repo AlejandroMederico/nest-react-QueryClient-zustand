@@ -1,7 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { Content } from './content.entity';
+export class ContentSummaryDto {
+  @ApiProperty() id: string;
+  @ApiProperty() name: string;
+  @ApiProperty() description: string;
+  @ApiProperty({ type: String, format: 'date-time' })
+  dateCreated: Date;
+}
 
 export class CreateContentDto {
   @IsNotEmpty()
@@ -32,8 +38,8 @@ export class ContentsListMetaDto {
 }
 
 export class ContentsListResponseDto {
-  @ApiProperty({ type: [Content] })
-  data: Content[];
+  @ApiProperty({ type: [ContentSummaryDto] })
+  data: ContentSummaryDto[];
 
   @ApiProperty({ type: ContentsListMetaDto })
   meta: ContentsListMetaDto;

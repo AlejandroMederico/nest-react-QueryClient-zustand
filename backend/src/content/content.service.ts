@@ -116,8 +116,14 @@ export class ContentService {
       const skip = (page - 1) * limit;
       qb.skip(skip).take(limit);
       const [rows, total] = await qb.getManyAndCount();
+      const data = rows.map((c) => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+        dateCreated: c.dateCreated,
+      }));
       return {
-        data: rows,
+        data,
         meta: { page, limit, total },
       };
     } catch (error) {
@@ -145,6 +151,7 @@ export class ContentService {
       return await Content.create({
         id: content.id,
         ...updateContentDto,
+        dateCreated: new Date(),
       }).save();
     } catch (error) {
       throw new HttpException(

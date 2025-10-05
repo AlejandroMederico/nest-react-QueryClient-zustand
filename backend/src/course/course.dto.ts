@@ -1,7 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-import { Course } from './course.entity';
+export class CourseSummaryDto {
+  @ApiProperty() id: string;
+  @ApiProperty() name: string;
+  @ApiProperty() description: string;
+  @ApiProperty({ type: String, format: 'date-time' })
+  dateCreated: Date;
+}
 
 export class CoursesListMetaDto {
   @ApiProperty() page: number;
@@ -10,8 +16,8 @@ export class CoursesListMetaDto {
 }
 
 export class CoursesListResponseDto {
-  @ApiProperty({ type: [Course] })
-  data: Course[];
+  @ApiProperty({ type: [CourseSummaryDto] })
+  data: CourseSummaryDto[];
 
   @ApiProperty({ type: CoursesListMetaDto })
   meta: CoursesListMetaDto;

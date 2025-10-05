@@ -38,8 +38,14 @@ export class CourseService {
       const skip = (page - 1) * limit;
       qb.skip(skip).take(limit);
       const [rows, total] = await qb.getManyAndCount();
+      const data = rows.map((c) => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+        dateCreated: c.dateCreated,
+      }));
       return {
-        data: rows,
+        data,
         meta: { page, limit, total },
       };
     } catch (error) {
@@ -71,7 +77,11 @@ export class CourseService {
   async update(id: string, updateCourseDto: UpdateCourseDto): Promise<Course> {
     try {
       const course = await this.findById(id);
-      return await Course.create({ id: course.id, ...updateCourseDto }).save();
+      return await Course.create({
+        id: course.id,
+        ...updateCourseDto,
+        dateCreated: new Date(),
+      }).save();
     } catch (error) {
       throw new HttpException(
         `CourseService.update: ${error.message}`,
