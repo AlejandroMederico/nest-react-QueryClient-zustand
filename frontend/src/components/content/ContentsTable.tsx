@@ -124,7 +124,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
   return (
     <>
       <div className="table-container">
-        <Table columns={['Nombre', 'Descripción', 'Creado', 'Acciones']}>
+        <Table columns={['Name', 'Description', 'Created/Updated', 'Actions']}>
           {isLoading ? (
             <tr>
               <td colSpan={4} className="py-8 text-center text-gray-500">
@@ -267,14 +267,14 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
           <input
             type="text"
             className="input"
-            placeholder="Nombre"
+            placeholder="Name"
             required
             {...register('name')}
           />
           <input
             type="text"
             className="input"
-            placeholder="Descripción"
+            placeholder="Description"
             required
             {...register('description')}
           />

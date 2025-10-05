@@ -86,7 +86,7 @@ export default function CoursesTable({
   return (
     <>
       <div className="table-container">
-        <Table columns={['Name', 'Description', 'Created', 'Actions']}>
+        <Table columns={['Name', 'Description', 'Created/Updated', 'Actions']}>
           {isLoading
             ? null
             : courses.map(({ id, name, description, dateCreated }) => (
