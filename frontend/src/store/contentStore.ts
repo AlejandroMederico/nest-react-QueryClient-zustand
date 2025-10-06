@@ -102,6 +102,7 @@ const useContentStore = createWithEqualityFn<State & Actions>()(
             };
           }),
         );
+        get().fetchContents(courseId);
       },
 
       setPage(courseId, page) {

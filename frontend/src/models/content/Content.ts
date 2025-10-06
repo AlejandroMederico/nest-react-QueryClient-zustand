@@ -3,4 +3,5 @@ export default interface Content {
   name: string;
   description: string;
   dateCreated: Date;
+  image?: string | null;
 }
