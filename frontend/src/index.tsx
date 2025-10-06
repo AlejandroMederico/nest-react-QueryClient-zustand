@@ -1,4 +1,5 @@
 import './styles/index.css';
+import './i18n';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -11,11 +12,11 @@ import reportWebVitals from './reportWebVitals';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60_000, // 60s de "frescura" (NO genera tráfico solo)
-      refetchInterval: false, // sin polling
-      refetchOnWindowFocus: false, // no re-fetch al volver a la pestaña
-      refetchOnReconnect: false, // no re-fetch al reconectar
-      retry: 1, // opcional, menos agresivo
+      staleTime: 60_000,
+      refetchInterval: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
     },
     mutations: {
       retry: 0,
@@ -23,7 +24,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Devtools solo en desarrollo (v3)
 const Devtools = React.lazy(() =>
   import('react-query/devtools').then((m) => ({
     default: m.ReactQueryDevtools,

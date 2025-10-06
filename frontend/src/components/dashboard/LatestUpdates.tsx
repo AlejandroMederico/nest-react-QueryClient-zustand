@@ -1,10 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from 'react-query';
 
 import { contentService } from '../../services/ContentService';
 import { courseService } from '../../services/CourseService';
 
 export default function LatestUpdates() {
+  const { t } = useTranslation();
   const { data: courses, isLoading: loadingCourses } = useQuery(
     'latest-courses',
     async () => {
@@ -29,9 +31,9 @@ export default function LatestUpdates() {
   return (
     <div className="flex flex-col md:flex-row gap-5 mt-8">
       <div className="card shadow flex-1">
-        <h2 className="font-semibold text-lg mb-3">Últimos cursos</h2>
+        <h2 className="font-semibold text-lg mb-3">{t('latest_courses')}</h2>
         {loadingCourses ? (
-          <div>Cargando...</div>
+          <div>{t('loading')}</div>
         ) : (
           <ul className="divide-y">
             {courses?.map((c) => (
@@ -47,16 +49,16 @@ export default function LatestUpdates() {
         )}
       </div>
       <div className="card shadow flex-1">
-        <h2 className="font-semibold text-lg mb-3">Últimos contenidos</h2>
+        <h2 className="font-semibold text-lg mb-3">{t('latest_contents')}</h2>
         {loadingContents ? (
-          <div>Cargando...</div>
+          <div>{t('loading')}</div>
         ) : (
           <ul className="divide-y">
             {contents?.map((ct) => (
               <li key={ct.id} className="py-2">
                 <div className="font-semibold">{ct.name}</div>
                 <div className="text-sm text-gray-600">
-                  Curso: {ct.course?.name || '-'}
+                  {t('course')}: {ct.course?.name || '-'}
                 </div>
                 <div className="text-xs text-gray-400">
                   {new Date(ct.dateCreated).toLocaleString()}

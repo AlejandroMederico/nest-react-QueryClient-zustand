@@ -2,6 +2,7 @@ import { useState } from 'react';
 import React from 'react';
 import { Loader } from 'react-feather';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from 'react-query';
 
 import UpdateUserRequest from '../../models/user/UpdateUserRequest';
@@ -9,6 +10,7 @@ import { userService } from '../../services/UserService';
 import useAuth from '../../store/authStore';
 
 export default function UpdateProfile() {
+  const { t } = useTranslation();
   const { authenticatedUser } = useAuth();
   const [error, setError] = useState<string>();
 
@@ -45,11 +47,13 @@ export default function UpdateProfile() {
           className="flex mt-3 flex-col gap-3 justify-center md:w-1/2 lg:w-1/3 mx-auto items-center"
           onSubmit={handleSubmit(handleUpdateUser)}
         >
-          <h1 className="font-semibold text-4xl mb-10">{`Welcome ${data.firstName}`}</h1>
+          <h1 className="font-semibold text-4xl mb-10">
+            {t('welcome') + ' ' + data.firstName}
+          </h1>
           <hr />
           <div className="flex gap-3 w-full">
             <div className="w-1/2">
-              <label className="font-semibold">First Name</label>
+              <label className="font-semibold">{t('first_name')}</label>
               <input
                 type="text"
                 className="input w-full mt-1"
@@ -60,7 +64,7 @@ export default function UpdateProfile() {
               />
             </div>
             <div className="w-1/2">
-              <label className="font-semibold">Last Name</label>
+              <label className="font-semibold">{t('last_name')}</label>
               <input
                 type="text"
                 className="input w-full mt-1"
@@ -72,7 +76,7 @@ export default function UpdateProfile() {
             </div>
           </div>
           <div className="w-full">
-            <label className="font-semibold">Username</label>
+            <label className="font-semibold">{t('username')}</label>
             <input
               type="text"
               className="input w-full mt-1"
@@ -83,7 +87,7 @@ export default function UpdateProfile() {
             />
           </div>
           <div className="w-full">
-            <label className="font-semibold">Password</label>
+            <label className="font-semibold">{t('password')}</label>
             <input
               type="password"
               className="input w-full mt-1"

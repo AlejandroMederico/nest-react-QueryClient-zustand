@@ -1,12 +1,13 @@
 import React from 'react';
 import { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface TableProps {
   columns: string[];
   children: ReactNode;
 }
-
 export default function Table({ columns, children }: TableProps) {
+  const { t } = useTranslation();
   return (
     <table className="min-w-full divide-y divide-gray-200">
       <thead>
@@ -21,7 +22,7 @@ export default function Table({ columns, children }: TableProps) {
             </th>
           ))}
           <th scope="col" className="relative px-6 py-3">
-            <span className="sr-only">Edit</span>
+            <span className="sr-only">{t('edit')}</span>
           </th>
         </tr>
       </thead>

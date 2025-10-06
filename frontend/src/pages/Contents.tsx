@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import React from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 import { useHistory } from 'react-router-dom';
 import { shallow } from 'zustand/shallow';
@@ -16,6 +17,7 @@ import useContentStore from '../store/contentStore';
 import { toErrorMessage } from '../utils/errors';
 
 export default function Course() {
+  const { t } = useTranslation();
   const history = useHistory();
   const { id: courseId } = useParams<{ id: string }>();
   const { authenticatedUser } = useAuth();
@@ -107,23 +109,41 @@ export default function Course() {
   return (
     <Layout>
       <h1 className="font-semibold text-3xl mb-5">
-        {courseName ? `${courseName} Contents` : ''}
+        {courseName ? `${courseName} ${t('contents')}` : ''}
       </h1>
       <hr />
       <div className="flex flex-row gap-3 my-5">
         {authenticatedUser.role !== 'user' ? (
           <>
             <button
-              className="btn flex gap-2 w-full sm:w-auto justify-center"
+              className="btn flex items-center justify-center gap-2 w-full sm:w-auto"
+              style={{ minHeight: 48 }}
               onClick={() => history.push('/courses')}
             >
-              ← Back
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: '100%',
+                }}
+              >
+                ←
+              </span>
+              <span className="flex-1 flex items-center justify-center">
+                {t('back')}
+              </span>
             </button>
             <button
-              className="btn flex gap-2 w-full sm:w-auto justify-center"
+              className="btn flex items-center justify-center gap-2 w-full sm:w-auto"
+              style={{ minHeight: 48 }}
               onClick={() => setAddContentShow(true)}
             >
-              <Plus /> Add Content
+              <span className="flex items-center">
+                <Plus />
+              </span>
+              <span className="flex-1 flex items-center justify-center">
+                {t('add_content')}
+              </span>
             </button>
           </>
         ) : null}
@@ -134,14 +154,14 @@ export default function Course() {
           <input
             type="text"
             className="input w-1/2"
-            placeholder="Name"
+            placeholder={t('name')}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <input
             type="text"
             className="input w-1/2"
-            placeholder="Description"
+            placeholder={t('description')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -161,7 +181,7 @@ export default function Course() {
       {/* Add Content Modal */}
       <Modal show={addContentShow}>
         <div className="flex">
-          <h1 className="font-semibold mb-3">Add Content</h1>
+          <h1 className="font-semibold mb-3">{t('add_content')}</h1>
           <button
             className="ml-auto focus:outline-none"
             onClick={() => {
@@ -182,7 +202,7 @@ export default function Course() {
           <input
             type="text"
             className="input"
-            placeholder="Name"
+            placeholder={t('name')}
             disabled={isSubmitting}
             required
             {...register('name')}
@@ -190,18 +210,18 @@ export default function Course() {
           <input
             type="text"
             className="input"
-            placeholder="Description"
+            placeholder={t('description')}
             disabled={isSubmitting}
             required
             {...register('description')}
           />
           <div className="flex flex-col gap-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              add image (Optional)
+              {t('add_image_optional')}
             </label>
             <div className="flex items-center gap-4">
               <label className="cursor-pointer px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors shadow-sm">
-                Select image
+                {t('select_image')}
                 <input
                   type="file"
                   accept="image/*"
@@ -231,7 +251,7 @@ export default function Course() {
                 className="text-xs text-red-500 mt-1 underline"
                 onClick={() => setSelectedImage(null)}
               >
-                Remove image
+                {t('remove_image')}
               </button>
             )}
           </div>
@@ -239,7 +259,7 @@ export default function Course() {
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />
             ) : (
-              'Save'
+              t('save')
             )}
           </button>
           {formError ? (

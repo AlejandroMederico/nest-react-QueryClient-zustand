@@ -10,6 +10,7 @@ import {
   X,
 } from 'react-feather';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import type Course from '../../models/course/Course';
@@ -40,6 +41,7 @@ export default function CoursesTable({
   onPageChange,
 }: CoursesTableProps) {
   const { authenticatedUser } = useAuth();
+  const { t } = useTranslation();
   const userId = authenticatedUser?.id;
   const {
     toggleFavorite,
@@ -78,7 +80,7 @@ export default function CoursesTable({
     try {
       setIsDeleting(true);
       await deleteCourse(selectedCourseId);
-      await fetchCourses(); // re-sync una vez
+      await fetchCourses();
       setDeleteShow(false);
     } catch (e: unknown) {
       setError(toErrorMessage(e, 'Error deleting course'));
@@ -109,7 +111,14 @@ export default function CoursesTable({
   return (
     <>
       <div className="table-container">
-        <Table columns={['Name', 'Description', 'Created/Updated', 'Actions']}>
+        <Table
+          columns={[
+            t('name'),
+            t('description'),
+            t('created_updated'),
+            t('actions'),
+          ]}
+        >
           {isLoading
             ? null
             : courses.map(({ id, name, description, dateCreated }) => {
@@ -120,9 +129,7 @@ export default function CoursesTable({
                     <TableItem>
                       <button
                         className="focus:outline-none mr-2"
-                        title={
-                          isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'
-                        }
+                        title={isFav ? t('remove_favorite') : t('add_favorite')}
                         disabled={favLoading || !userId}
                         onClick={() =>
                           userId && toggleFavorite(courseId, isFav, userId)
@@ -188,7 +195,7 @@ export default function CoursesTable({
 
         {!isLoading && courses.length < 1 ? (
           <div className="text-center my-5 text-gray-500">
-            <h1>Empty</h1>
+            <h1>{t('empty')}</h1>
           </div>
         ) : null}
       </div>
@@ -214,14 +221,9 @@ export default function CoursesTable({
       <Modal show={deleteShow}>
         <AlertTriangle size={30} className="text-red-500 mr-5 fixed" />
         <div className="ml-10">
-          <h3 className="mb-2 font-semibold">Delete Course</h3>
+          <h3 className="mb-2 font-semibold">{t('delete_course')}</h3>
           <hr />
-          <p className="mt-2">
-            Are you sure you want to delete the course? All of course's data
-            will be permanently removed.
-            <br />
-            This action cannot be undone.
-          </p>
+          <p className="mt-2">{t('delete_course_confirm')}</p>
         </div>
         <div className="flex flex-row gap-3 justify-end mt-5">
           <button
@@ -232,7 +234,7 @@ export default function CoursesTable({
             }}
             disabled={isDeleting}
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             className="btn danger"
@@ -242,7 +244,7 @@ export default function CoursesTable({
             {isDeleting ? (
               <Loader className="mx-auto animate-spin" />
             ) : (
-              'Delete'
+              t('delete')
             )}
           </button>
         </div>
@@ -256,7 +258,7 @@ export default function CoursesTable({
       {/* Update Course Modal */}
       <Modal show={updateShow}>
         <div className="flex">
-          <h1 className="font-semibold mb-3">Update Course</h1>
+          <h1 className="font-semibold mb-3">{t('update_course')}</h1>
           <button
             className="ml-auto focus:outline-none"
             onClick={() => {
@@ -277,14 +279,14 @@ export default function CoursesTable({
           <input
             type="text"
             className="input"
-            placeholder="Name"
+            placeholder={t('name')}
             required
             {...register('name')}
           />
           <input
             type="text"
             className="input"
-            placeholder="Description"
+            placeholder={t('description')}
             required
             {...register('description')}
           />
@@ -292,7 +294,7 @@ export default function CoursesTable({
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />
             ) : (
-              'Save'
+              t('save')
             )}
           </button>
           {error ? (

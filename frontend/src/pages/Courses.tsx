@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { shallow } from 'zustand/shallow';
 
 import CoursesTable from '../components/courses/CoursesTable';
@@ -12,6 +13,7 @@ import useCourseStore from '../store/courseStore';
 import { toErrorMessage } from '../utils/errors';
 
 export default function Courses() {
+  const { t } = useTranslation();
   const { authenticatedUser } = useAuth();
 
   const [
@@ -92,14 +94,14 @@ export default function Courses() {
 
   return (
     <Layout>
-      <h1 className="font-semibold text-3xl mb-5">Manage Courses</h1>
+      <h1 className="font-semibold text-3xl mb-5">{t('manage_courses')}</h1>
       <hr />
       {authenticatedUser.role !== 'user' ? (
         <button
           className="btn my-5 flex gap-2 w-full sm:w-auto justify-center"
           onClick={() => setAddCourseShow(true)}
         >
-          <Plus /> Add Course
+          <Plus /> {t('add_course')}
         </button>
       ) : null}
 
@@ -108,14 +110,14 @@ export default function Courses() {
           <input
             type="text"
             className="input w-1/2"
-            placeholder="Name"
+            placeholder={t('name')}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <input
             type="text"
             className="input w-1/2"
-            placeholder="Description"
+            placeholder={t('description')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -133,7 +135,7 @@ export default function Courses() {
 
       <Modal show={addCourseShow}>
         <div className="flex">
-          <h1 className="font-semibold mb-3">Add Course</h1>
+          <h1 className="font-semibold mb-3">{t('add_course')}</h1>
           <button
             className="ml-auto focus:outline-none"
             onClick={() => {
@@ -153,7 +155,7 @@ export default function Courses() {
           <input
             type="text"
             className="input"
-            placeholder="Name"
+            placeholder={t('name')}
             disabled={isSubmitting}
             required
             {...register('name')}
@@ -161,7 +163,7 @@ export default function Courses() {
           <input
             type="text"
             className="input"
-            placeholder="Description"
+            placeholder={t('description')}
             disabled={isSubmitting}
             required
             {...register('description')}
@@ -170,7 +172,7 @@ export default function Courses() {
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />
             ) : (
-              'Save'
+              t('save')
             )}
           </button>
           {formError ? (

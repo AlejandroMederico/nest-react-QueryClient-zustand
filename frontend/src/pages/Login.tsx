@@ -2,6 +2,7 @@ import { useState } from 'react';
 import React from 'react';
 import { Loader } from 'react-feather';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
 
 import logo from '../assets/favicon.png';
@@ -10,6 +11,7 @@ import { authService } from '../services/AuthService';
 import useAuth from '../store/authStore';
 
 export default function Login() {
+  const { t } = useTranslation();
   const { setAuthenticatedUser, setToken } = useAuth();
   const history = useHistory();
 
@@ -38,7 +40,9 @@ export default function Login() {
     <div className="h-full flex justify-center items-center">
       <div className="card shadow">
         <img src={logo} alt="Logo" className="w-24 h-24 mx-auto mb-3" />
-        <h1 className="mb-3 text-center font-semibold text-4xl">Login</h1>
+        <h1 className="mb-3 text-center font-semibold text-4xl">
+          {t('login')}
+        </h1>
         <hr />
         <form
           className="flex flex-col gap-5 mt-8 w-64"
@@ -47,7 +51,7 @@ export default function Login() {
           <input
             type="text"
             className="input sm:text-lg"
-            placeholder="Username"
+            placeholder={t('username')}
             required
             disabled={isSubmitting}
             {...register('username')}
@@ -55,7 +59,7 @@ export default function Login() {
           <input
             type="password"
             className="input sm:text-lg"
-            placeholder="Password"
+            placeholder={t('password')}
             required
             disabled={isSubmitting}
             {...register('password')}
@@ -68,7 +72,7 @@ export default function Login() {
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />
             ) : (
-              'Login'
+              t('login')
             )}
           </button>
           {error ? (

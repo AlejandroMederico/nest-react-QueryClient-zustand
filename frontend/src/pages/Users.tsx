@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import React from 'react';
 import { Loader, Plus, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import Layout from '../components/layout';
 import Modal from '../components/shared/Modal';
@@ -11,12 +12,11 @@ import CreateUserRequest from '../models/user/CreateUserRequest';
 import { toErrorMessage } from '../utils/errors';
 
 export default function Users() {
+  const { t } = useTranslation();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
   const [role, setRole] = useState('');
-
-  // Debounce para q (300ms)
   const [q, setQ] = useState('');
   const timerRef = useRef<number | null>(null);
   useEffect(() => {
@@ -74,14 +74,14 @@ export default function Users() {
 
   return (
     <Layout>
-      <h1 className="font-semibold text-3xl mb-5">Manage Users</h1>
+      <h1 className="font-semibold text-3xl mb-5">{t('manage_users')}</h1>
       <hr />
       <div className="my-5 flex gap-2 w-full sm:w-auto">
         <button className="btn flex gap-2" onClick={() => setAddUserShow(true)}>
-          <Plus /> Add User
+          <Plus /> {t('add_user')}
         </button>
         <button className="btn" onClick={() => refetch()} disabled={isFetching}>
-          {isFetching ? 'Updating…' : 'Actualizar'}
+          {isFetching ? t('updating') : t('refresh')}
         </button>
       </div>
 
@@ -91,14 +91,14 @@ export default function Users() {
           <input
             type="text"
             className="input w-1/2"
-            placeholder="First Name"
+            placeholder={t('first_name')}
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
           />
           <input
             type="text"
             className="input w-1/2"
-            placeholder="Last Name"
+            placeholder={t('last_name')}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
           />
@@ -107,7 +107,7 @@ export default function Users() {
           <input
             type="text"
             className="input w-1/2"
-            placeholder="Username"
+            placeholder={t('username')}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
@@ -142,7 +142,7 @@ export default function Users() {
       {/* Add User Modal */}
       <Modal show={addUserShow}>
         <div className="flex">
-          <h1 className="font-semibold mb-3">Add User</h1>
+          <h1 className="font-semibold mb-3">{t('add_user')}</h1>
           <button
             className="ml-auto focus:outline-none"
             onClick={() => {
@@ -164,7 +164,7 @@ export default function Users() {
             <input
               type="text"
               className="input sm:w-1/2"
-              placeholder="First Name"
+              placeholder={t('first_name')}
               required
               disabled={isSubmitting}
               {...register('firstName')}
@@ -172,7 +172,7 @@ export default function Users() {
             <input
               type="text"
               className="input sm:w-1/2"
-              placeholder="Last Name"
+              placeholder={t('last_name')}
               required
               disabled={isSubmitting}
               {...register('lastName')}
@@ -182,7 +182,7 @@ export default function Users() {
             type="text"
             className="input"
             required
-            placeholder="Username"
+            placeholder={t('username')}
             disabled={isSubmitting}
             {...register('username')}
           />
@@ -190,7 +190,7 @@ export default function Users() {
             type="password"
             className="input"
             required
-            placeholder="Password (min 6 characters)"
+            placeholder={t('password_placeholder')}
             disabled={isSubmitting}
             {...register('password')}
           />
@@ -208,7 +208,7 @@ export default function Users() {
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />
             ) : (
-              'Save'
+              t('save')
             )}
           </button>
           {formError && (

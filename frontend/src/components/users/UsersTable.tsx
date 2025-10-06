@@ -3,6 +3,7 @@ import React from 'react';
 import { AlertTriangle, Edit2, Loader, Trash2, X } from 'react-feather';
 import { useWatch } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { useDeleteUser, useUpdateUser } from '../../features/users/users.hooks';
 import type { UsersListParams } from '../../lib/queryKeys';
@@ -31,6 +32,7 @@ export default function UsersTable({
   refetch,
 }: UsersTableProps) {
   const [deleteShow, setDeleteShow] = useState(false);
+  const { t } = useTranslation();
   const [updateShow, setUpdateShow] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>();
@@ -91,7 +93,15 @@ export default function UsersTable({
   return (
     <>
       <div className="table-container">
-        <Table columns={['Name', 'Username', 'Status', 'Role', 'Actions']}>
+        <Table
+          columns={[
+            t('name'),
+            t('username'),
+            t('status'),
+            t('role'),
+            t('actions'),
+          ]}
+        >
           {isLoading
             ? null
             : users.map(
@@ -102,11 +112,11 @@ export default function UsersTable({
                     <TableItem>
                       {isActive ? (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Active
+                          {t('active')}
                         </span>
                       ) : (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                          Inactive
+                          {t('inactive')}
                         </span>
                       )}
                     </TableItem>
@@ -147,7 +157,7 @@ export default function UsersTable({
 
         {!isLoading && users.length < 1 ? (
           <div className="text-center my-5 text-gray-500">
-            <h1>Empty</h1>
+            <h1>{t('empty')}</h1>
           </div>
         ) : null}
 
@@ -179,14 +189,9 @@ export default function UsersTable({
       <Modal show={deleteShow}>
         <AlertTriangle size={30} className="text-red-500 mr-5 fixed" />
         <div className="ml-10">
-          <h3 className="mb-2 font-semibold">Delete User</h3>
+          <h3 className="mb-2 font-semibold">{t('delete_user')}</h3>
           <hr />
-          <p className="mt-2">
-            Are you sure you want to delete the user? All of user's data will be
-            permanently removed.
-            <br />
-            This action cannot be undone.
-          </p>
+          <p className="mt-2">{t('delete_user_confirm')}</p>
         </div>
         <div className="flex flex-row gap-3 justify-end mt-5">
           <button
@@ -197,7 +202,7 @@ export default function UsersTable({
             }}
             disabled={isDeleting}
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             className="btn danger"
@@ -207,7 +212,7 @@ export default function UsersTable({
             {isDeleting ? (
               <Loader className="mx-auto animate-spin" />
             ) : (
-              'Delete'
+              t('delete')
             )}
           </button>
         </div>
@@ -221,7 +226,7 @@ export default function UsersTable({
       {/* Update User Modal */}
       <Modal show={updateShow}>
         <div className="flex">
-          <h1 className="font-semibold mb-3">Update User</h1>
+          <h1 className="font-semibold mb-3">{t('update_user')}</h1>
           <button
             className="ml-auto focus:outline-none"
             onClick={() => {
@@ -243,35 +248,35 @@ export default function UsersTable({
             <input
               type="text"
               className="input sm:w-1/2"
-              placeholder="First Name"
+              placeholder={t('first_name')}
               {...register('firstName')}
             />
             <input
               type="text"
               className="input sm:w-1/2"
-              placeholder="Last Name"
+              placeholder={t('last_name')}
               {...register('lastName')}
             />
           </div>
           <input
             type="text"
             className="input"
-            placeholder="Username"
+            placeholder={t('username')}
             {...register('username')}
           />
           <input
             type="password"
             className="input"
-            placeholder="Password"
+            placeholder={t('password')}
             {...register('password')}
           />
           <select className="input" {...register('role')}>
-            <option value="user">User</option>
-            <option value="editor">Editor</option>
-            <option value="admin">Admin</option>
+            <option value="user">{t('user')}</option>
+            <option value="editor">{t('editor')}</option>
+            <option value="admin">{t('admin')}</option>
           </select>
           <div>
-            <label className="font-semibold mr-3">Active</label>
+            <label className="font-semibold mr-3">{t('active')}</label>
             <input
               type="checkbox"
               className="input w-5 h-5"
@@ -284,7 +289,7 @@ export default function UsersTable({
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />
             ) : (
-              'Save'
+              t('save')
             )}
           </button>
           {error ? (

@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { AlertTriangle, Edit2, Loader, Trash2, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import type Content from '../../models/content/Content';
 import type UpdateContentRequest from '../../models/content/UpdateContentRequest';
@@ -31,6 +32,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
   onPageChange,
 }) => {
   const { authenticatedUser } = useAuth();
+  const { t } = useTranslation();
 
   const deleteContent = useContentStore((s) => s.deleteContent);
   const updateContent = useContentStore((s) => s.updateContent);
@@ -161,17 +163,17 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
       <div className="table-container">
         <Table
           columns={[
-            'Name',
-            'Description',
-            'Created/Updated',
-            'Imagen',
-            'Actions',
+            t('name'),
+            t('description'),
+            t('created_updated'),
+            t('image'),
+            t('actions'),
           ]}
         >
           {isLoading ? (
             <tr>
               <td colSpan={4} className="py-8 text-center text-gray-500">
-                Cargando…
+                {t('loading')}
               </td>
             </tr>
           ) : contents.length > 0 ? (
@@ -248,7 +250,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
                   {canEdit && (
                     <button
                       type="button"
-                      title="Editar"
+                      title={t('edit')}
                       className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
                       onClick={() => openUpdate(_content)}
                     >
@@ -258,7 +260,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
                   {canDelete && (
                     <button
                       type="button"
-                      title="Eliminar"
+                      title={t('delete')}
                       className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
                       onClick={() => openDelete(_content.id)}
                     >
@@ -270,18 +272,23 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
             ))
           ) : (
             <tr>
-              <td colSpan={4} className="py-8 text-center text-gray-500">
-                Empty
+              <td
+                colSpan={4}
+                style={{ height: '180px', padding: 0 }}
+                className="!p-0"
+              >
+                <div
+                  className="flex flex-col items-center justify-center text-gray-500"
+                  style={{ minHeight: '180px', width: '100%' }}
+                >
+                  <h1 className="text-center w-full flex justify-center">
+                    {t('empty')}
+                  </h1>
+                </div>
               </td>
             </tr>
           )}
         </Table>
-
-        {!isLoading && contents.length < 1 ? (
-          <div className="text-center my-5 text-gray-500">
-            <h1>Empty</h1>
-          </div>
-        ) : null}
       </div>
       {/* Paginación */}
       {typeof total === 'number' && total > limit && (
@@ -306,12 +313,9 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
         <div className="flex items-start gap-3">
           <AlertTriangle size={30} className="text-red-500 flex-shrink-0" />
           <div>
-            <h3 className="mb-2 font-semibold">Eliminar contenido</h3>
+            <h3 className="mb-2 font-semibold">{t('delete_content')}</h3>
             <hr />
-            <p className="mt-2">
-              ¿Seguro que deseas eliminar este contenido? Esta acción no se
-              puede deshacer.
-            </p>
+            <p className="mt-2">{t('delete_content_confirm')}</p>
           </div>
         </div>
 
@@ -322,7 +326,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
             disabled={isDeleting}
             type="button"
           >
-            Cancelar
+            {t('cancel')}
           </button>
           <button
             className="btn danger"
@@ -332,11 +336,11 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
           >
             {isDeleting ? (
               <Loader
-                aria-label="Eliminando…"
+                aria-label={t('deleting')}
                 className="mx-auto animate-spin"
               />
             ) : (
-              'Eliminar'
+              t('delete')
             )}
           </button>
         </div>
@@ -351,7 +355,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
       {/* Modal Actualizar */}
       <Modal show={updateShow}>
         <div className="flex">
-          <h1 className="font-semibold mb-3">Actualizar contenido</h1>
+          <h1 className="font-semibold mb-3">{t('update_content')}</h1>
           <button
             className="ml-auto focus:outline-none"
             onClick={closeUpdate}
@@ -371,24 +375,24 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
           <input
             type="text"
             className="input"
-            placeholder="Name"
+            placeholder={t('name')}
             required
             {...register('name')}
           />
           <input
             type="text"
             className="input"
-            placeholder="Description"
+            placeholder={t('description')}
             required
             {...register('description')}
           />
           <div className="flex flex-col gap-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              add image (Optional)
+              {t('add_image_optional')}
             </label>
             <div className="flex items-center gap-4">
               <label className="cursor-pointer px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors shadow-sm">
-                Select image
+                {t('select_image')}
                 <input
                   type="file"
                   accept="image/*"
@@ -417,7 +421,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
                 className="text-xs text-red-500 mt-1 underline"
                 onClick={() => setSelectedImage(null)}
               >
-                Remove image
+                {t('remove_image')}
               </button>
             )}
           </div>
@@ -425,7 +429,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />
             ) : (
-              'Guardar'
+              t('save')
             )}
           </button>
 
