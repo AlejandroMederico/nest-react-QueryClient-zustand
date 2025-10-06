@@ -25,7 +25,10 @@ export class UserService {
 
       const { password } = createUserDto;
       createUserDto.password = await bcrypt.hash(password, 10);
-      return await User.create(createUserDto).save();
+      return await User.create({
+        ...createUserDto,
+        createdAt: new Date(),
+      }).save();
     } catch (error) {
       throw new HttpException(
         `UserService.save message: ${error.message}`,
@@ -129,7 +132,11 @@ export class UserService {
         }
       }
 
-      return await User.create({ id, ...updateUserDto }).save();
+      return await User.create({
+        id,
+        ...updateUserDto,
+        createdAt: new Date(),
+      }).save();
     } catch (error) {
       throw new HttpException(
         `UserService.update message: ${error.message}`,

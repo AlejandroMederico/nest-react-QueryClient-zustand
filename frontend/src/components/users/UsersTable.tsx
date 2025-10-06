@@ -19,6 +19,7 @@ interface UsersTableProps {
   visibleParams: UsersListParams;
   total?: number;
   onPageChange?: (n: number) => void;
+  refetch?: () => void;
 }
 
 export default function UsersTable({
@@ -27,6 +28,7 @@ export default function UsersTable({
   visibleParams,
   total,
   onPageChange,
+  refetch,
 }: UsersTableProps) {
   const [deleteShow, setDeleteShow] = useState(false);
   const [updateShow, setUpdateShow] = useState(false);
@@ -55,6 +57,7 @@ export default function UsersTable({
       await deleteM.mutateAsync(selectedUserId);
       setDeleteShow(false);
       setError(null);
+      if (typeof refetch === 'function') refetch();
     } catch (e: unknown) {
       setError(toErrorMessage(e, 'Error deleting user'));
     } finally {
@@ -79,6 +82,7 @@ export default function UsersTable({
       setUpdateShow(false);
       reset();
       setError(null);
+      if (typeof refetch === 'function') refetch();
     } catch (e: unknown) {
       setError(toErrorMessage(e, 'Error updating user'));
     }

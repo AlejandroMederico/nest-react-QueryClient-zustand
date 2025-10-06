@@ -136,6 +136,7 @@ export default function Users() {
         visibleParams={params}
         total={data?.meta?.total ?? 0}
         onPageChange={setPage}
+        refetch={refetch}
       />
 
       {/* Add User Modal */}
