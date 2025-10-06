@@ -8,7 +8,15 @@ import apiService from './ApiService';
 class ContentService {
   async save(courseId: string, req: CreateContentRequest): Promise<void> {
     try {
-      await apiService.post(`/courses/${courseId}/contents`, req);
+      const formData = new FormData();
+      formData.append('name', req.name);
+      formData.append('description', req.description);
+      if (req.image) {
+        formData.append('image', req.image);
+      }
+      await apiService.post(`/courses/${courseId}/contents`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
     } catch (e: unknown) {
       const msg = toErrorMessage(e, 'Error adding content');
       throw Object.assign(new Error(msg), {
@@ -66,7 +74,16 @@ class ContentService {
     req: UpdateContentRequest,
   ): Promise<void> {
     try {
-      await apiService.put(`/courses/${courseId}/contents/${id}`, req);
+      const formData = new FormData();
+      if (req.name !== undefined) formData.append('name', req.name);
+      if (req.description !== undefined)
+        formData.append('description', req.description);
+      if (req.image) {
+        formData.append('image', req.image);
+      }
+      await apiService.put(`/courses/${courseId}/contents/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
     } catch (e: unknown) {
       const msg = toErrorMessage(e, 'Error updating content');
       throw Object.assign(new Error(msg), {

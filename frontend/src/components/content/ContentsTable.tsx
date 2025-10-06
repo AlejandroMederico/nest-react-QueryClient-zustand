@@ -41,6 +41,8 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
   const [selectedContentId, setSelectedContentId] = useState<string>();
   const [error, setError] = useState<string | null>(null);
   const [updateShow, setUpdateShow] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [modalImage, setModalImage] = useState<string | null>(null);
 
   const {
     register,
@@ -54,6 +56,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
     () => ['admin', 'editor'].includes(authenticatedUser?.role ?? ''),
     [authenticatedUser?.role],
   );
+
   const canDelete = useMemo(
     () => authenticatedUser?.role === 'admin',
     [authenticatedUser?.role],
@@ -64,6 +67,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
       setSelectedContentId(c.id);
       setValue('name', c.name);
       setValue('description', c.description ?? '');
+      setSelectedImage(null);
       setUpdateShow(true);
     },
     [setValue],
@@ -77,6 +81,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
   const closeUpdate = useCallback(() => {
     setUpdateShow(false);
     setError(null);
+    setSelectedImage(null);
     reset();
   }, [reset]);
 
@@ -104,13 +109,16 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
     async (payload: UpdateContentRequest) => {
       if (!selectedContentId) return;
       try {
-        // Limpia campos vacíos/undefined para enviar solo cambios reales
         const body = Object.fromEntries(
           Object.entries(payload).filter(
-            ([, v]) => v !== undefined && String(v).trim() !== '',
+            ([k, v]) =>
+              v !== undefined &&
+              (k === 'image' ? v !== null : String(v).trim() !== ''),
           ),
-        ) as UpdateContentRequest;
-
+        ) as UpdateContentRequest & { image?: File | null };
+        if (selectedImage) {
+          body.image = selectedImage;
+        }
         await updateContent(courseId, selectedContentId, body);
         await fetchContents(courseId);
         closeUpdate();
@@ -118,13 +126,48 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
         setError(toErrorMessage(e, 'Error updating content'));
       }
     },
-    [selectedContentId, courseId, updateContent, fetchContents, closeUpdate],
+    [
+      selectedContentId,
+      courseId,
+      updateContent,
+      fetchContents,
+      closeUpdate,
+      selectedImage,
+    ],
   );
+
+  // Tamaño fijo responsivo para la imagen ampliada
+  const modalImgStyle: React.CSSProperties = {
+    width: '320px',
+    height: '320px',
+    maxWidth: '90vw',
+    maxHeight: '90vw',
+    borderRadius: 12,
+    boxShadow: '0 2px 16px rgba(0,0,0,0.2)',
+    background: '#fff',
+    objectFit: 'cover',
+    display: 'block',
+  };
+  // En desktop, usar 480x480px
+  if (typeof window !== 'undefined' && window.innerWidth >= 640) {
+    modalImgStyle.width = '480px';
+    modalImgStyle.height = '480px';
+    modalImgStyle.maxWidth = '90vw';
+    modalImgStyle.maxHeight = '90vh';
+  }
 
   return (
     <>
       <div className="table-container">
-        <Table columns={['Name', 'Description', 'Created/Updated', 'Actions']}>
+        <Table
+          columns={[
+            'Name',
+            'Description',
+            'Created/Updated',
+            'Imagen',
+            'Actions',
+          ]}
+        >
           {isLoading ? (
             <tr>
               <td colSpan={4} className="py-8 text-center text-gray-500">
@@ -132,22 +175,82 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
               </td>
             </tr>
           ) : contents.length > 0 ? (
-            contents.map((c) => (
-              <tr key={c.id}>
-                <TableItem>{c.name}</TableItem>
-                <TableItem>{c.description}</TableItem>
+            contents.map((_content) => (
+              <tr key={_content.id}>
+                <TableItem>{_content.name}</TableItem>
+                <TableItem>{_content.description}</TableItem>
                 <TableItem>
-                  {c.dateCreated
-                    ? new Date(c.dateCreated).toLocaleDateString()
+                  {_content.dateCreated
+                    ? new Date(_content.dateCreated).toLocaleDateString()
                     : '—'}
                 </TableItem>
+                <TableItem>
+                  {_content.image ? (
+                    <img
+                      src={
+                        _content.image.startsWith('http')
+                          ? _content.image
+                          : `${_content.image.startsWith('/') ? '' : '/'}${
+                              _content.image
+                            }`
+                      }
+                      alt={_content.name}
+                      style={{
+                        width: 48,
+                        height: 48,
+                        objectFit: 'cover',
+                        borderRadius: 6,
+                        background: '#f3f3f3',
+                        display: 'block',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() =>
+                        setModalImage(
+                          _content.image.startsWith('http')
+                            ? _content.image
+                            : `${_content.image.startsWith('/') ? '' : '/'}${
+                                _content.image
+                              }`,
+                        )
+                      }
+                    />
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
+                </TableItem>
+                {/* Modal para ver imagen grande */}
+                <Modal
+                  show={!!modalImage}
+                  className="flex flex-col items-center justify-center"
+                >
+                  <button
+                    className="ml-auto mb-2 text-gray-700 hover:text-red-500 font-bold text-xl"
+                    onClick={() => setModalImage(null)}
+                    style={{
+                      position: 'absolute',
+                      top: 16,
+                      right: 24,
+                      zIndex: 10,
+                    }}
+                    aria-label="Cerrar imagen"
+                  >
+                    <X size={32} />
+                  </button>
+                  {modalImage && (
+                    <img
+                      src={modalImage}
+                      alt="Imagen ampliada"
+                      style={modalImgStyle}
+                    />
+                  )}
+                </Modal>
                 <TableItem>
                   {canEdit && (
                     <button
                       type="button"
                       title="Editar"
                       className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
-                      onClick={() => openUpdate(c)}
+                      onClick={() => openUpdate(_content)}
                     >
                       <Edit2 size={18} />
                     </button>
@@ -157,7 +260,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
                       type="button"
                       title="Eliminar"
                       className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
-                      onClick={() => openDelete(c.id)}
+                      onClick={() => openDelete(_content.id)}
                     >
                       <Trash2 size={18} />
                     </button>
@@ -263,6 +366,7 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
         <form
           className="flex flex-col gap-5 mt-5"
           onSubmit={handleSubmit(handleUpdate)}
+          encType="multipart/form-data"
         >
           <input
             type="text"
@@ -278,6 +382,45 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
             required
             {...register('description')}
           />
+          <div className="flex flex-col gap-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              add image (Optional)
+            </label>
+            <div className="flex items-center gap-4">
+              <label className="cursor-pointer px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors shadow-sm">
+                Select image
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file =
+                      e.target.files && e.target.files[0]
+                        ? e.target.files[0]
+                        : null;
+                    setSelectedImage(file);
+                  }}
+                />
+              </label>
+              {selectedImage && (
+                <img
+                  src={URL.createObjectURL(selectedImage)}
+                  alt="preview"
+                  className="w-16 h-16 object-cover rounded border"
+                  style={{ background: '#f3f3f3' }}
+                />
+              )}
+            </div>
+            {selectedImage && (
+              <button
+                type="button"
+                className="text-xs text-red-500 mt-1 underline"
+                onClick={() => setSelectedImage(null)}
+              >
+                Remove image
+              </button>
+            )}
+          </div>
           <button className="btn" disabled={isSubmitting} type="submit">
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />

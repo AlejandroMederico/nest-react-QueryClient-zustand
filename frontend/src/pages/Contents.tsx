@@ -25,6 +25,7 @@ export default function Course() {
   const [addContentShow, setAddContentShow] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const timerRef = useRef<number | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [bucket, setFilters, setPage, fetchContents, addContent] =
     useContentStore(
       (s) => [
@@ -89,9 +90,14 @@ export default function Course() {
   const saveContent = async (req: CreateContentRequest) => {
     try {
       if (!courseId) return;
-      await addContent(courseId, req);
+      const body = {
+        ...req,
+        image: selectedImage || undefined,
+      };
+      await addContent(courseId, body);
       setAddContentShow(false);
       setFormError(null);
+      setSelectedImage(null);
       reset();
     } catch (e: unknown) {
       setFormError(toErrorMessage(e, 'Error creating content'));
@@ -171,6 +177,7 @@ export default function Course() {
         <form
           className="flex flex-col gap-5 mt-5"
           onSubmit={handleSubmit(saveContent)}
+          encType="multipart/form-data"
         >
           <input
             type="text"
@@ -188,6 +195,46 @@ export default function Course() {
             required
             {...register('description')}
           />
+          <div className="flex flex-col gap-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              add image (Optional)
+            </label>
+            <div className="flex items-center gap-4">
+              <label className="cursor-pointer px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors shadow-sm">
+                Select image
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={isSubmitting}
+                  onChange={(e) => {
+                    const file =
+                      e.target.files && e.target.files[0]
+                        ? e.target.files[0]
+                        : null;
+                    setSelectedImage(file);
+                  }}
+                />
+              </label>
+              {selectedImage && (
+                <img
+                  src={URL.createObjectURL(selectedImage)}
+                  alt="preview"
+                  className="w-16 h-16 object-cover rounded border"
+                  style={{ background: '#f3f3f3' }}
+                />
+              )}
+            </div>
+            {selectedImage && (
+              <button
+                type="button"
+                className="text-xs text-red-500 mt-1 underline"
+                onClick={() => setSelectedImage(null)}
+              >
+                Remove image
+              </button>
+            )}
+          </div>
           <button className="btn" disabled={isSubmitting}>
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />
