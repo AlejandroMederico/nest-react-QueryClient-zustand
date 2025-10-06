@@ -1,6 +1,7 @@
 import React, { Children, Fragment, ReactNode, useState } from 'react';
 import { Menu, X } from 'react-feather';
 
+import Footer from './Footer';
 import Sidebar from './Sidebar';
 
 type LayoutProps = {
@@ -19,7 +20,7 @@ export default function Layout({ children }: LayoutProps) {
       <Sidebar className={showSidebar ? 'show' : ''} />
 
       {/* Área de contenido a la derecha del sidebar */}
-      <main className="lg:ml-72">
+      <main className="lg:ml-72 min-h-screen flex flex-col">
         {/* Franja gris pegada arriba + línea fina al final */}
         {header && (
           <div className="px-5 sm:px-10 py-4 bg-gray-200 border-b border-gray-300">
@@ -28,7 +29,8 @@ export default function Layout({ children }: LayoutProps) {
         )}
 
         {/* Cuerpo */}
-        <div className="px-5 sm:px-10">{body}</div>
+        <div className="px-5 sm:px-10 flex-1">{body}</div>
+        <Footer />
       </main>
 
       {/* Botón flotante para abrir/cerrar el sidebar en mobile */}

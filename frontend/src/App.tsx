@@ -12,6 +12,7 @@ const Courses = lazy(() => import('./pages/Courses'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Login = lazy(() => import('./pages/Login'));
 const Users = lazy(() => import('./pages/Users'));
+const Contact = lazy(() => import('./pages/Contact'));
 
 function App() {
   const { authenticatedUser, setAuthenticatedUser } = useAuth();
@@ -62,6 +63,8 @@ function App() {
             />
             <PrivateRoute exact path="/courses" component={Courses} />
             <PrivateRoute exact path="/courses/:id" component={Contents} />
+
+            <Route exact path="/contact" component={Contact} />
             <AuthRoute exact path="/login" component={Login} />
 
             <Route

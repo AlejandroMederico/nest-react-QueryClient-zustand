@@ -58,5 +58,9 @@
   "add_user": "Add User",
   "updating": "Updating...",
   "refresh": "Refresh",
-  "all": "All"
+  "all": "All",
+  "contact_link": "Contact",
+  "message_sent_successfully": "Your message was sent successfully! We will contact you soon.",
+  "error_sending_mail": "There was an error sending the message. Please try again later.",
+  "an_unexpected_error_occurred": "An unexpected error occurred."
 }

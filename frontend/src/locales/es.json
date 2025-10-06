@@ -58,5 +58,9 @@
   "add_user": "Agregar usuario",
   "updating": "Actualizando...",
   "refresh": "Actualizar",
-  "all": "Todos"
+  "all": "Todos",
+  "contact_link": "Contáctanos",
+  "message_sent_successfully": "¡Tu mensaje fue enviado correctamente! Nos pondremos en contacto pronto.",
+  "error_sending_mail": "Ocurrió un error al enviar el mensaje. Intenta nuevamente más tarde.",
+  "an_unexpected_error_occurred": "Ocurrió un error inesperado."
 }
