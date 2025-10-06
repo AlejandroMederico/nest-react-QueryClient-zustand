@@ -6,6 +6,21 @@ import { toErrorMessage } from '../utils/errors';
 import apiService from './ApiService';
 
 class ContentService {
+  async findLatestGlobal(limit = 5): Promise<Content[]> {
+    try {
+      const { data } = await apiService.get<Content[]>(`/contents/latest`, {
+        params: { limit },
+      });
+      return data;
+    } catch (e: unknown) {
+      const msg = toErrorMessage(e, 'Error fetching latest contents');
+      throw Object.assign(new Error(msg), {
+        op: 'findLatestGlobal',
+        entity: 'content',
+        limit,
+      });
+    }
+  }
   async save(courseId: string, req: CreateContentRequest): Promise<void> {
     try {
       const formData = new FormData();

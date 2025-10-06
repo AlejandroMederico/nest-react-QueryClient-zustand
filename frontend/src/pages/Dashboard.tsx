@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from 'react-query';
 
-import UpdateProfile from '../components/dashboard/UpdateProfile';
+import LatestUpdates from '../components/dashboard/LatestUpdates';
 import Layout from '../components/layout';
 import { statsService } from '../services/StatsService';
 import useAuth from '../store/authStore';
@@ -41,7 +41,8 @@ export default function Dashboard() {
           </div>
         ) : null}
 
-        <UpdateProfile />
+        {/* <UpdateProfile /> */}
+        <LatestUpdates />
       </div>
     </Layout>
   );
