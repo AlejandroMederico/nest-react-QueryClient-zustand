@@ -15,20 +15,38 @@ const Users = lazy(() => import('./pages/Users'));
 const Contact = lazy(() => import('./pages/Contact'));
 
 function App() {
-  const { authenticatedUser, setAuthenticatedUser } = useAuth();
+  const { setAuthenticatedUser, setToken, logout } = useAuth();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
   const { i18n } = useTranslation();
 
   useEffect(() => {
     let isMounted = true;
     (async () => {
       try {
-        if (!authenticatedUser) {
+        const localToken = localStorage.getItem('token');
+        if (localToken) {
           const authResponse = await authService.refresh();
-          if (isMounted) setAuthenticatedUser(authResponse.user ?? null);
+          if (isMounted) {
+            setAuthenticatedUser(authResponse.user ?? null);
+            setToken(authResponse.token);
+            setSessionError(null);
+          }
+        } else {
+          if (isMounted) {
+            setAuthenticatedUser(null);
+            setToken(undefined);
+          }
         }
       } catch {
-        if (isMounted) setAuthenticatedUser(null);
+        if (isMounted) {
+          setAuthenticatedUser(null);
+          setToken(undefined);
+          setSessionError(
+            'Sesión expirada. Por favor inicia sesión nuevamente.',
+          );
+          logout();
+        }
       } finally {
         if (isMounted) setIsLoaded(true);
       }
@@ -36,7 +54,7 @@ function App() {
     return () => {
       isMounted = false;
     };
-  }, [authenticatedUser, setAuthenticatedUser]);
+  }, [setAuthenticatedUser, setToken, logout]);
 
   if (!isLoaded) return <Loader className="h-16 w-16 mx-auto" />;
 
@@ -51,6 +69,22 @@ function App() {
           EN
         </button>
       </div>
+      {sessionError && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 60,
+            right: 10,
+            zIndex: 1000,
+            background: '#fee',
+            color: '#900',
+            padding: '8px 16px',
+            borderRadius: 8,
+          }}
+        >
+          {sessionError}
+        </div>
+      )}
       <Router>
         <Suspense fallback={<Loader className="h-16 w-16 mx-auto" />}>
           <Switch>
