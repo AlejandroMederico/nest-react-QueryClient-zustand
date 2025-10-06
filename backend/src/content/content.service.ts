@@ -223,6 +223,18 @@ export class ContentService {
           HttpStatus.NOT_FOUND,
         );
       }
+      // Eliminar imagen asociada si existe
+      if (content.image) {
+        // Si el path es absoluto (/shared/upload/...), conviértelo a relativo
+        let imagePath = content.image;
+        if (imagePath.startsWith('/')) {
+          imagePath = imagePath.slice(1);
+        }
+        const fullPath = path.resolve(__dirname, '../../', imagePath);
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+        }
+      }
       await Content.delete(content);
       return id;
     } catch (error) {
