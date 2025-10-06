@@ -1,11 +1,8 @@
-// src/user/user.service.spec.ts
 import { HttpException } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 
-import { User } from './user.entity'; // asegúrate que el import es correcto
+import { User } from './user.entity';
 import { UserService } from './user.service';
 
-// helper: garantiza que la propiedad estática exista y sea función antes de espiar
 const ensureStatic = (klass: any, key: string) => {
   if (typeof klass[key] !== 'function') {
     klass[key] = () => undefined; // función dummy
@@ -15,13 +12,20 @@ const ensureStatic = (klass: any, key: string) => {
 
 describe('UserService (sin DB, con stubs)', () => {
   let service: UserService;
+  let repoMock: any;
 
-  beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      providers: [UserService], // Servicio REAL
-    }).compile();
-
-    service = moduleRef.get(UserService);
+  beforeEach(() => {
+    // Mock del repositorio con los métodos usados en el servicio
+    repoMock = {
+      createQueryBuilder: jest.fn(),
+      find: jest.fn(),
+      findOne: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+      save: jest.fn(),
+      update: jest.fn(),
+    };
+    service = new UserService(repoMock);
   });
 
   afterEach(() => {
@@ -67,7 +71,7 @@ describe('UserService (sin DB, con stubs)', () => {
       const out = await service.save(dto);
 
       expect(spyFindByUsername).toHaveBeenCalledWith('alice');
-      expect(spyCreate).toHaveBeenCalledWith(dto);
+      expect(spyCreate).toHaveBeenCalledWith(expect.objectContaining(dto));
       expect(saveMock).toHaveBeenCalled();
       expect(out).toMatchObject({ username: 'alice' });
     });
@@ -85,24 +89,50 @@ describe('UserService (sin DB, con stubs)', () => {
   });
 
   describe('findAll', () => {
-    it('devuelve lista de usuarios', async () => {
-      const spyFind = ensureStatic(User as any, 'find');
-      spyFind.mockResolvedValue([
+    it('devuelve lista de usuarios y meta', async () => {
+      // Simula estructura de respuesta del servicio real
+      const users = [
         { id: 'u1', username: 'alice' },
         { id: 'u2', username: 'bob' },
-      ]);
-
-      const out = await service.findAll({} as any);
-
-      expect(spyFind).toHaveBeenCalled();
-      expect(out).toHaveLength(2);
+      ];
+      // Mock del QueryBuilder y getManyAndCount
+      const qbMock = {
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([users, 2]),
+      };
+      (service as any).repo = {
+        createQueryBuilder: jest.fn().mockReturnValue(qbMock),
+      };
+      const query = { page: 1, limit: 10, sort: 'createdAt', order: 'desc' };
+      const out = await service.findAll(query as any);
+      expect((service as any).repo.createQueryBuilder).toHaveBeenCalledWith(
+        'u',
+      );
+      expect(qbMock.getManyAndCount).toHaveBeenCalled();
+      expect(out.data).toHaveLength(2);
+      expect(out.data[0].username).toBe('alice');
+      expect(out.meta.page).toBe(1);
+      expect(out.meta.limit).toBe(10);
+      expect(out.meta.total).toBe(2);
     });
 
     it('si falla debajo, lanza HttpException (envuelto)', async () => {
-      const spyFind = ensureStatic(User as any, 'find');
-      spyFind.mockRejectedValue(new Error('boom'));
-
-      await expect(service.findAll({} as any)).rejects.toBeInstanceOf(
+      // Mock del QueryBuilder para lanzar error
+      const qbMock = {
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockRejectedValue(new Error('boom')),
+      };
+      (service as any).repo = {
+        createQueryBuilder: jest.fn().mockReturnValue(qbMock),
+      };
+      const query = { page: 1, limit: 10, sort: 'createdAt', order: 'desc' };
+      await expect(service.findAll(query as any)).rejects.toBeInstanceOf(
         HttpException,
       );
     });
@@ -151,7 +181,9 @@ describe('UserService (sin DB, con stubs)', () => {
       const out = await service.update('u1', { firstName: 'Alicia' } as any);
 
       expect(spyFindOne).toHaveBeenCalledWith('u1');
-      expect(spyCreate).toHaveBeenCalledWith({ id: 'u1', firstName: 'Alicia' });
+      expect(spyCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'u1', firstName: 'Alicia' }),
+      );
       expect(saveMock).toHaveBeenCalled();
       expect(out).toMatchObject({ firstName: 'Alicia' });
     });

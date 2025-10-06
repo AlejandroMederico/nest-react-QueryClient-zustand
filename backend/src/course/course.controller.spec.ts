@@ -121,12 +121,47 @@ describe('CourseController', () => {
   });
 
   describe('findAllCourses', () => {
-    it('retorna lista de cursos', async () => {
-      const list = await controller.findAll({});
-      expect(Array.isArray(list)).toBe(true);
-      expect(list[0].id).toBe('testid1');
-      expect(list[1].name).toBe('test2');
-      expect(list[2].description).toBe('test3');
+    it('retorna lista de cursos paginada', async () => {
+      // Simula CourseQuery completo
+      const query = {
+        page: 1,
+        limit: 10,
+        sort: 'dateCreated' as const,
+        order: 'desc' as const,
+        name: '',
+        description: '',
+      };
+      // Simula respuesta paginada
+      CourseMockService.findAll.mockResolvedValueOnce({
+        data: [
+          {
+            id: 'testid1',
+            name: 'test1',
+            description: 'test1',
+            dateCreated: new Date(),
+          },
+          {
+            id: 'testid2',
+            name: 'test2',
+            description: 'test2',
+            dateCreated: new Date(),
+          },
+          {
+            id: 'testid3',
+            name: 'test3',
+            description: 'test3',
+            dateCreated: new Date(),
+          },
+        ],
+        meta: { page: 1, limit: 10, total: 3 },
+      });
+      const res = await controller.findAll(query);
+      expect(CourseMockService.findAll).toHaveBeenCalledWith(query);
+      expect(res.data).toHaveLength(3);
+      expect(res.data[0].id).toBe('testid1');
+      expect(res.data[1].name).toBe('test2');
+      expect(res.data[2].description).toBe('test3');
+      expect(res.meta).toMatchObject({ page: 1, limit: 10, total: 3 });
     });
   });
 
@@ -168,10 +203,14 @@ describe('CourseController', () => {
       });
       const date = spyDate.mock.instances[0];
 
-      expect(ContentMockService.save).toHaveBeenCalledWith('cid', {
-        name: 'c1',
-        description: 'd1',
-      });
+      expect(ContentMockService.save).toHaveBeenCalledWith(
+        'cid',
+        {
+          name: 'c1',
+          description: 'd1',
+        },
+        undefined,
+      );
       expect(res).toEqual({
         id: 'testcontentid',
         dateCreated: date,
@@ -184,10 +223,21 @@ describe('CourseController', () => {
 
   describe('findAllContentsByCourseId', () => {
     it('lista contenidos del curso', async () => {
-      const res = await controller.findAllContentsByCourseId('cid', {});
+      const contentQuery = {
+        page: 1,
+        limit: 10,
+        sort: 'dateCreated' as const,
+        order: 'desc' as const,
+        name: '',
+        description: '',
+      };
+      const res = await controller.findAllContentsByCourseId(
+        'cid',
+        contentQuery,
+      );
       expect(ContentMockService.findAllByCourseId).toHaveBeenCalledWith(
         'cid',
-        {},
+        contentQuery,
       );
       expect(res).toHaveLength(2);
       expect(res[0].id).toBe('testcontentid1');
@@ -200,9 +250,14 @@ describe('CourseController', () => {
       const res = await controller.updateContent('cid', 'ctid', {
         description: 'Dx',
       });
-      expect(ContentMockService.update).toHaveBeenCalledWith('cid', 'ctid', {
-        description: 'Dx',
-      });
+      expect(ContentMockService.update).toHaveBeenCalledWith(
+        'cid',
+        'ctid',
+        {
+          description: 'Dx',
+        },
+        undefined,
+      );
       expect(res).toEqual({ id: 'ctid', description: 'Dx' });
     });
   });

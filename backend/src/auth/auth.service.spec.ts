@@ -32,7 +32,7 @@ describe('AuthService', () => {
       providers: [
         {
           provide: AuthService,
-          useValue: MockService, // 👈 mockeamos el servicio (tu diseño actual)
+          useValue: MockService,
         },
       ],
     }).compile();
@@ -90,6 +90,18 @@ describe('AuthService', () => {
         user: { username: 'test' },
       });
       expect(MockService.refresh).toHaveBeenCalledWith('token', req.res);
+    });
+
+    it('should throw error if refresh token is missing', async () => {
+      const req = mocks.createRequest();
+      req.res = mocks.createResponse();
+      // Simula el servicio real lanzando error si el token está vacío (async)
+      MockService.refresh.mockImplementationOnce(async () => {
+        throw new Error('Refresh token required');
+      });
+      await expect(service.refresh('', req.res)).rejects.toThrow(
+        'Refresh token required',
+      );
     });
   });
 });

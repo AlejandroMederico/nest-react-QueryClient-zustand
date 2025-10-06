@@ -6,32 +6,35 @@ import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { UserService } from './user.service';
 
 const MockService = {
-  findAll: jest.fn().mockResolvedValue([
-    {
-      id: 'test1',
-      firstName: 'test1',
-      lastName: 'test1',
-      username: 'test1',
-      isActive: true,
-      role: Role.Admin,
-    },
-    {
-      id: 'test2',
-      firstName: 'test2',
-      lastName: 'test2',
-      username: 'test2',
-      isActive: true,
-      role: Role.Editor,
-    },
-    {
-      id: 'test3',
-      firstName: 'test3',
-      lastName: 'test3',
-      username: 'test3',
-      isActive: true,
-      role: Role.User,
-    },
-  ]),
+  findAll: jest.fn().mockImplementation(() => ({
+    data: [
+      {
+        id: 'test1',
+        firstName: 'test1',
+        lastName: 'test1',
+        username: 'test1',
+        isActive: true,
+        role: Role.Admin,
+      },
+      {
+        id: 'test2',
+        firstName: 'test2',
+        lastName: 'test2',
+        username: 'test2',
+        isActive: true,
+        role: Role.Editor,
+      },
+      {
+        id: 'test3',
+        firstName: 'test3',
+        lastName: 'test3',
+        username: 'test3',
+        isActive: true,
+        role: Role.User,
+      },
+    ],
+    meta: { page: 1, limit: 10, total: 3 },
+  })),
 
   save: jest.fn().mockImplementation((createUserDto: CreateUserDto) => {
     return {
@@ -99,18 +102,27 @@ describe('UserController', () => {
       });
       expect(returnValue.id).toBe('testid');
       expect(returnValue.firstName).toBe('test');
-      expect(returnValue.role).toBe(Role.User); // 'user'
+      expect(returnValue.role).toBe(Role.User);
     });
   });
 
   describe('findAllUsers', () => {
     it('should get the list of users', async () => {
-      const users = await controller.findAll({});
-      expect(Array.isArray(users)).toBe(true);
-      expect(users.length).toBe(3);
-      expect(users[0].firstName).toBe('test1');
-      expect(users[1].lastName).toBe('test2');
-      expect(users[2].username).toBe('test3');
+      const query = {
+        page: 1,
+        limit: 10,
+        sort: 'createdAt' as const,
+        order: 'desc' as const,
+      };
+      const result = await controller.findAll(query);
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.length).toBe(3);
+      expect(result.data[0].firstName).toBe('test1');
+      expect(result.data[1].lastName).toBe('test2');
+      expect(result.data[2].username).toBe('test3');
+      expect(result.meta.page).toBe(1);
+      expect(result.meta.limit).toBe(10);
+      expect(result.meta.total).toBe(3);
     });
   });
 
@@ -130,7 +142,7 @@ describe('UserController', () => {
         role: Role.Editor,
       });
       expect(updatedUser.id).toBe('testid');
-      expect(updatedUser.role).toBe(Role.Editor); // 'editor'
+      expect(updatedUser.role).toBe(Role.Editor);
       expect((updatedUser as any).lastName).toBeUndefined();
       expect(MockService.update).toHaveBeenCalledWith('testid', {
         firstName: 'test',

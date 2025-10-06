@@ -38,45 +38,52 @@ export class UserService {
   }
 
   async findAll(dto: UsersListQueryDto) {
-    const { page, limit, q, role, sort, order } = dto;
+    try {
+      const { page, limit, q, role, sort, order } = dto;
 
-    const SORT_MAP: Record<string, string> = {
-      username: 'u.username',
-      firstName: 'u.firstName',
-      lastName: 'u.lastName',
-      role: 'u.role',
-      isActive: 'u.isActive',
-      createdAt: 'u.createdAt',
-    };
-    const sortColumn = SORT_MAP[sort] ?? 'u.createdAt';
-    const sortOrder = order.toUpperCase() as 'ASC' | 'DESC';
+      const SORT_MAP: Record<string, string> = {
+        username: 'u.username',
+        firstName: 'u.firstName',
+        lastName: 'u.lastName',
+        role: 'u.role',
+        isActive: 'u.isActive',
+        createdAt: 'u.createdAt',
+      };
+      const sortColumn = SORT_MAP[sort] ?? 'u.createdAt';
+      const sortOrder = order.toUpperCase() as 'ASC' | 'DESC';
 
-    const qb = this.repo.createQueryBuilder('u');
+      const qb = this.repo.createQueryBuilder('u');
 
-    if (q && q.trim()) {
-      const like = `%${q.trim()}%`;
-      qb.andWhere(
-        '(u.username ILIKE :like OR u.firstName ILIKE :like OR u.lastName ILIKE :like)',
-        { like },
+      if (q && q.trim()) {
+        const like = `%${q.trim()}%`;
+        qb.andWhere(
+          '(u.username ILIKE :like OR u.firstName ILIKE :like OR u.lastName ILIKE :like)',
+          { like },
+        );
+      }
+
+      if (role) {
+        qb.andWhere('u.role = :role', { role });
+      }
+
+      qb.orderBy(sortColumn, sortOrder);
+
+      const skip = (page - 1) * limit;
+      qb.skip(skip).take(limit);
+
+      const [rows, total] = await qb.getManyAndCount();
+      const data = rows.map(({ ...safe }) => safe);
+
+      return {
+        data,
+        meta: { page, limit, total },
+      };
+    } catch (error) {
+      throw new HttpException(
+        `UserService.findAll message: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-
-    if (role) {
-      qb.andWhere('u.role = :role', { role });
-    }
-
-    qb.orderBy(sortColumn, sortOrder);
-
-    const skip = (page - 1) * limit;
-    qb.skip(skip).take(limit);
-
-    const [rows, total] = await qb.getManyAndCount();
-    const data = rows.map(({ ...safe }) => safe);
-
-    return {
-      data,
-      meta: { page, limit, total },
-    };
   }
 
   async findById(id: string): Promise<User> {

@@ -173,9 +173,11 @@
               "    pm.response.to.have.status(200);\r",
               "});\r",
               "\r",
-              "pm.test(\"Response should be an array\", function () {\r",
+              "pm.test(\"Response should be an object with data array and meta\", function () {\r",
               "    const jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData).to.be.an(\"array\");\r",
+              "    pm.expect(jsonData).to.be.an(\"object\");\r",
+              "    pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"array\");\r",
+              "    pm.expect(jsonData).to.have.property(\"meta\").that.is.an(\"object\");\r",
               "});"
             ],
             "type": "text/javascript"
@@ -463,9 +465,11 @@
               "    pm.response.to.have.status(200);\r",
               "});\r",
               "\r",
-              "pm.test(\"Should get an array\", function () {\r",
+              "pm.test(\"Should get an object with data array and meta\", function () {\r",
               "    var jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData).to.be.an(\"array\");\r",
+              "    pm.expect(jsonData).to.be.an(\"object\");\r",
+              "    pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"array\");\r",
+              "    pm.expect(jsonData).to.have.property(\"meta\").that.is.an(\"object\");\r",
               "});"
             ],
             "type": "text/javascript"
@@ -670,9 +674,11 @@
               "    pm.response.to.have.status(200);\r",
               "});\r",
               "\r",
-              "pm.test(\"Should return an array\", function () {\r",
+              "pm.test(\"Should return an object with data array and meta\", function () {\r",
               "    const jsonData = pm.response.json();\r",
-              "    pm.expect(jsonData).to.be.an(\"array\");\r",
+              "    pm.expect(jsonData).to.be.an(\"object\");\r",
+              "    pm.expect(jsonData).to.have.property(\"data\").that.is.an(\"array\");\r",
+              "    pm.expect(jsonData).to.have.property(\"meta\").that.is.an(\"object\");\r",
               "});"
             ],
             "type": "text/javascript"

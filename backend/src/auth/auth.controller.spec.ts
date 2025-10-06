@@ -1,4 +1,3 @@
-// src/auth/auth.controller.spec.ts
 import { UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 
@@ -35,7 +34,6 @@ describe('AuthController', () => {
 
   describe('login', () => {
     it('devuelve tokens y user (200)', async () => {
-      // muchos controllers reciben (dto, res)
       const res: any = { cookie: jest.fn() };
 
       const out = await controller.login(
@@ -67,7 +65,6 @@ describe('AuthController', () => {
 
   describe('logout', () => {
     it('devuelve true', async () => {
-      // típicamente (req, res)
       const req: any = {};
       const res: any = { clearCookie: jest.fn() };
 
@@ -79,18 +76,24 @@ describe('AuthController', () => {
   });
 
   describe('refresh', () => {
-    it('devuelve nuevos tokens', async () => {
+    it('devuelve nuevos tokens y llama a res.json', async () => {
       const req: any = {
-        cookies: { refreshToken: 'r.jwt' },
-        body: { refreshToken: 'r.jwt' },
+        cookies: { 'refresh-token': 'r.jwt' },
       };
-      const res: any = { cookie: jest.fn() };
+      const res: any = { cookie: jest.fn(), json: jest.fn() };
 
-      const out = await controller.refresh(req, res);
+      authServiceMock.refresh.mockResolvedValueOnce({
+        token: 'jwt.token.mock',
+        user: { id: 'u1', username: 'admin', role: 'admin' },
+      });
 
-      expect(authServiceMock.refresh).toHaveBeenCalledWith(undefined, res); // 👈
-      expect(authServiceMock.refresh).toHaveBeenCalledTimes(1);
-      expect(out).toHaveProperty('accessToken');
+      await controller.refresh(req, res);
+
+      expect(authServiceMock.refresh).toHaveBeenCalledWith('r.jwt', res);
+      expect(res.json).toHaveBeenCalledWith({
+        token: 'jwt.token.mock',
+        user: { id: 'u1', username: 'admin', role: 'admin' },
+      });
     });
   });
 });

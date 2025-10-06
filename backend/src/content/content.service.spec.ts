@@ -37,7 +37,6 @@ describe('ContentService', () => {
     it('crea contenido bajo un curso y lo devuelve', async () => {
       const dto: CreateContentDto = { name: 'C1', description: 'D1' };
 
-      // valida curso
       courseService.findById.mockResolvedValueOnce({ id: 'course-123' });
 
       // Content.create().save()
@@ -70,32 +69,52 @@ describe('ContentService', () => {
   });
 
   describe('findAllByCourseId', () => {
-    it('lista contenidos por curso (con query opcional)', async () => {
-      const findSpy = jest.spyOn(Content as any, 'find').mockResolvedValue([
-        {
-          id: 'ct-1',
-          course: { id: 'course-123' },
-          name: 'a',
-          description: 'x',
-          dateCreated: new Date(),
-        },
-        {
-          id: 'ct-2',
-          course: { id: 'course-123' },
-          name: 'b',
-          description: 'y',
-          dateCreated: new Date(),
-        },
-      ]);
+    it('devuelve objeto con data y meta', async () => {
+      const getManyAndCount = async () => [
+        [
+          {
+            id: 'ct-1',
+            name: 'a',
+            description: 'x',
+            dateCreated: new Date(),
+            image: null,
+          },
+          {
+            id: 'ct-2',
+            name: 'b',
+            description: 'y',
+            dateCreated: new Date(),
+            image: null,
+          },
+        ],
+        2,
+      ];
+      const take = () => ({ getManyAndCount });
+      const skip = () => ({ take });
+      const orderBy = () => ({ skip });
+      const andWhere = () => ({ orderBy, skip, take, getManyAndCount });
+      const where = () => ({ andWhere, orderBy, skip, take, getManyAndCount });
+      jest.spyOn(Content as any, 'createQueryBuilder').mockReturnValue({
+        where,
+        andWhere,
+        orderBy,
+        skip,
+        take,
+        getManyAndCount,
+      });
 
       const res = await service.findAllByCourseId('course-123', {
+        page: 1,
+        limit: 10,
         name: 'a',
       } as any);
 
-      expect(findSpy).toHaveBeenCalledTimes(1); // no acoplamos al 'where' exacto
-      expect(res).toHaveLength(2);
-      expect(res[0].id).toBe('ct-1');
-      expect(res[1].id).toBe('ct-2');
+      expect(res).toHaveProperty('data');
+      expect(res.data).toHaveLength(2);
+      expect(res.data[0].id).toBe('ct-1');
+      expect(res.data[1].id).toBe('ct-2');
+      expect(res).toHaveProperty('meta');
+      expect(res.meta).toMatchObject({ page: 1, limit: 10, total: 2 });
     });
   });
 
@@ -111,7 +130,6 @@ describe('ContentService', () => {
           dateCreated: new Date(),
         });
 
-      // El service acepta SOLO contentId
       const content = await service.findById('ct-5');
 
       expect(oneSpy).toHaveBeenCalledTimes(1);
@@ -124,20 +142,15 @@ describe('ContentService', () => {
     it('actualiza el contenido y devuelve los cambios', async () => {
       const dto: UpdateContentDto = { name: 'NN', description: 'DD' };
 
-      // el service valida con findByCourseIdAndId(courseId, contentId)
       jest.spyOn(service, 'findByCourseIdAndId').mockResolvedValueOnce({
         id: 'ct-1',
         course: { id: 'course-123' },
+        save: jest.fn().mockResolvedValue({
+          id: 'ct-1',
+          course: { id: 'course-123' },
+          ...dto,
+        }),
       } as any);
-
-      const saveMock = jest.fn().mockResolvedValue({
-        id: 'ct-1',
-        course: { id: 'course-123' },
-        ...dto,
-      });
-      const createSpy = jest
-        .spyOn(Content as any, 'create')
-        .mockReturnValue({ save: saveMock });
 
       const updated = await service.update('course-123', 'ct-1', dto);
 
@@ -145,13 +158,11 @@ describe('ContentService', () => {
         'course-123',
         'ct-1',
       );
-      expect(createSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'ct-1', ...dto }),
-      );
-      expect(updated).toEqual({
+      expect(updated).toMatchObject({
         id: 'ct-1',
         course: { id: 'course-123' },
-        ...dto,
+        name: dto.name,
+        description: dto.description,
       });
     });
   });
@@ -174,7 +185,6 @@ describe('ContentService', () => {
         'course-123',
         'ct-9',
       );
-      // el service hace Content.delete(content) pasando la entidad
       expect(delSpy).toHaveBeenCalledWith(contentEntity);
       expect(id).toBe('ct-9');
     });

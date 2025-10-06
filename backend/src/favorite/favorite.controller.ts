@@ -8,9 +8,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RolesGuard } from 'auth/guards/roles.guard';
 
 import { JwtGuard } from '../auth/guards/jwt.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { FavoriteService } from './favorite.service';
 
 @Controller('courses/:courseId/favorite')

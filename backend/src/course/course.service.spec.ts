@@ -48,34 +48,57 @@ describe('CourseService', () => {
   });
 
   describe('findAll', () => {
-    it('devuelve lista de cursos', async () => {
-      const findSpy = jest.spyOn(Course as any, 'find').mockResolvedValue([
-        {
-          id: 'testid1',
-          name: 'test1',
-          description: 'test1',
-          dateCreated: new Date(),
-        },
-        {
-          id: 'testid2',
-          name: 'test2',
-          description: 'test2',
-          dateCreated: new Date(),
-        },
-        {
-          id: 'testid3',
-          name: 'test3',
-          description: 'test3',
-          dateCreated: new Date(),
-        },
+    it('devuelve lista de cursos paginada', async () => {
+      // Mock completo de createQueryBuilder y sus métodos encadenados
+      const getManyAndCount = jest.fn().mockResolvedValue([
+        [
+          {
+            id: 'testid1',
+            name: 'test1',
+            description: 'test1',
+            dateCreated: new Date(),
+          },
+          {
+            id: 'testid2',
+            name: 'test2',
+            description: 'test2',
+            dateCreated: new Date(),
+          },
+          {
+            id: 'testid3',
+            name: 'test3',
+            description: 'test3',
+            dateCreated: new Date(),
+          },
+        ],
+        3,
       ]);
+      const take = jest.fn().mockReturnValue({ getManyAndCount });
+      const skip = jest.fn().mockReturnValue({ take, getManyAndCount });
+      const orderBy = jest
+        .fn()
+        .mockReturnValue({ skip, take, getManyAndCount });
+      const andWhere = jest
+        .fn()
+        .mockReturnValue({ orderBy, skip, take, getManyAndCount });
+      const qb = { andWhere, orderBy, skip, take, getManyAndCount };
 
-      const res = await service.findAll({});
-      expect(findSpy).toHaveBeenCalledTimes(1);
-      expect(res).toHaveLength(3);
-      expect(res[0].id).toBe('testid1');
-      expect(res[1].name).toBe('test2');
-      expect(res[2].description).toBe('test3');
+      jest.spyOn(Course as any, 'createQueryBuilder').mockReturnValue(qb);
+
+      const res = await service.findAll({
+        page: 1,
+        limit: 10,
+        sort: 'dateCreated',
+        order: 'desc',
+        name: '',
+        description: '',
+      });
+
+      expect(res.data).toHaveLength(3);
+      expect(res.data[0].id).toBe('testid1');
+      expect(res.data[1].name).toBe('test2');
+      expect(res.data[2].description).toBe('test3');
+      expect(res.meta).toMatchObject({ page: 1, limit: 10, total: 3 });
     });
   });
 
@@ -106,12 +129,10 @@ describe('CourseService', () => {
     it('actualiza curso y retorna cambios', async () => {
       const dto: UpdateCourseDto = { name: 'NN', description: 'DD' };
 
-      // 🔧 IMPORTANTE: el service llama this.findById(id) → lo stubbeamos
       jest
         .spyOn(service, 'findById')
         .mockResolvedValueOnce({ id: 'testid' } as any);
 
-      // luego hace Course.create({ id, ...dto }).save()
       const saveMock = jest.fn().mockResolvedValue({
         id: 'testid',
         ...dto,
@@ -132,7 +153,6 @@ describe('CourseService', () => {
 
   describe('delete', () => {
     it('elimina curso y retorna el id', async () => {
-      // El service valida existencia
       jest
         .spyOn(service, 'findById')
         .mockResolvedValueOnce({ id: 'testid' } as any);
