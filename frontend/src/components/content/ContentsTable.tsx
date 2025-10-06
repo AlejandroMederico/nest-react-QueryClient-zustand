@@ -195,9 +195,17 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
                     <img
                       src={
                         _content.image.startsWith('http')
-                          ? _content.image
+                          ? `${_content.image}?v=${
+                              _content.dateCreated
+                                ? new Date(_content.dateCreated).getTime()
+                                : Date.now()
+                            }`
                           : `${_content.image.startsWith('/') ? '' : '/'}${
                               _content.image
+                            }?v=${
+                              _content.dateCreated
+                                ? new Date(_content.dateCreated).getTime()
+                                : Date.now()
                             }`
                       }
                       alt={_content.name}
@@ -213,9 +221,17 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
                       onClick={() =>
                         setModalImage(
                           _content.image.startsWith('http')
-                            ? _content.image
+                            ? `${_content.image}?v=${
+                                _content.dateCreated
+                                  ? new Date(_content.dateCreated).getTime()
+                                  : Date.now()
+                              }`
                             : `${_content.image.startsWith('/') ? '' : '/'}${
                                 _content.image
+                              }?v=${
+                                _content.dateCreated
+                                  ? new Date(_content.dateCreated).getTime()
+                                  : Date.now()
                               }`,
                         )
                       }
