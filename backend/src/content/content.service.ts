@@ -1,4 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ILike } from 'typeorm';
 
 import { CourseService } from '../course/course.service';
@@ -13,6 +15,7 @@ export class ContentService {
   async save(
     courseId: string,
     createContentDto: CreateContentDto,
+    image?: Express.Multer.File,
   ): Promise<Content> {
     try {
       const { name, description } = createContentDto;
@@ -22,12 +25,29 @@ export class ContentService {
         throw new HttpException('Course not found', HttpStatus.NOT_FOUND);
       }
 
-      return await Content.create({
+      const content = await Content.create({
         name,
         description,
         course,
         dateCreated: new Date(),
       }).save();
+
+      let imageUrl: string | undefined = undefined;
+      if (image) {
+        const uploadDir = path.resolve(__dirname, '../../shared/upload');
+        const ext = path.extname(image.originalname) || '.jpg';
+        const dest = path.join(uploadDir, `${content.id}${ext}`);
+        if (fs.existsSync(dest)) {
+          fs.unlinkSync(dest);
+        }
+        if (image.path !== dest) {
+          fs.renameSync(image.path, dest);
+        }
+        imageUrl = `/shared/upload/${content.id}${ext}`;
+        content.image = imageUrl;
+        await content.save();
+      }
+      return content;
     } catch (error) {
       throw new HttpException(
         `ContentService.save: ${error.message}`,
@@ -121,6 +141,7 @@ export class ContentService {
         name: c.name,
         description: c.description,
         dateCreated: c.dateCreated,
+        image: c.image ?? null,
       }));
       return {
         data,
@@ -138,6 +159,7 @@ export class ContentService {
     courseId: string,
     id: string,
     updateContentDto: UpdateContentDto,
+    image?: Express.Multer.File,
   ): Promise<Content> {
     try {
       const content = await this.findByCourseIdAndId(courseId, id);
@@ -148,11 +170,27 @@ export class ContentService {
           HttpStatus.NOT_FOUND,
         );
       }
-      return await Content.create({
-        id: content.id,
-        ...updateContentDto,
-        dateCreated: new Date(),
-      }).save();
+
+      if (updateContentDto.name !== undefined)
+        content.name = updateContentDto.name;
+      if (updateContentDto.description !== undefined)
+        content.description = updateContentDto.description;
+
+      if (image) {
+        const uploadDir = path.resolve(__dirname, '../../shared/upload');
+        const ext = path.extname(image.originalname) || '.jpg';
+        const dest = path.join(uploadDir, `${content.id}${ext}`);
+        if (fs.existsSync(dest)) {
+          fs.unlinkSync(dest);
+        }
+        if (image.path !== dest) {
+          fs.renameSync(image.path, dest);
+        }
+        content.image = `/shared/upload/${content.id}${ext}`;
+      }
+
+      await content.save();
+      return content;
     } catch (error) {
       throw new HttpException(
         `ContentService.update: ${error.message}`,

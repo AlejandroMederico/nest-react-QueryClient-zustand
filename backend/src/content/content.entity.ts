@@ -20,6 +20,9 @@ export class Content extends BaseEntity {
   @Column()
   description: string;
 
+  @Column({ nullable: true })
+  image?: string;
+
   @Column()
   dateCreated: Date;
 
