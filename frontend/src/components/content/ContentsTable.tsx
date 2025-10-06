@@ -162,13 +162,17 @@ const ContentsTable: React.FC<ContentsTableProps> = ({
     <>
       <div className="table-container">
         <Table
-          columns={[
-            t('name'),
-            t('description'),
-            t('created_updated'),
-            t('image'),
-            t('actions'),
-          ]}
+          columns={
+            canEdit
+              ? [
+                  t('name'),
+                  t('description'),
+                  t('created_updated'),
+                  t('image'),
+                  t('actions'),
+                ]
+              : [t('name'), t('description'), t('created_updated'), t('image')]
+          }
         >
           {isLoading ? (
             <tr>

@@ -113,39 +113,37 @@ export default function Course() {
       </h1>
       <hr />
       <div className="flex flex-row gap-3 my-5">
+        <button
+          className="btn flex items-center justify-center gap-2 w-full sm:w-auto"
+          style={{ minHeight: 48 }}
+          onClick={() => history.push('/courses')}
+        >
+          <span
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              height: '100%',
+            }}
+          >
+            ←
+          </span>
+          <span className="flex-1 flex items-center justify-center">
+            {t('back')}
+          </span>
+        </button>
         {authenticatedUser.role !== 'user' ? (
-          <>
-            <button
-              className="btn flex items-center justify-center gap-2 w-full sm:w-auto"
-              style={{ minHeight: 48 }}
-              onClick={() => history.push('/courses')}
-            >
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  height: '100%',
-                }}
-              >
-                ←
-              </span>
-              <span className="flex-1 flex items-center justify-center">
-                {t('back')}
-              </span>
-            </button>
-            <button
-              className="btn flex items-center justify-center gap-2 w-full sm:w-auto"
-              style={{ minHeight: 48 }}
-              onClick={() => setAddContentShow(true)}
-            >
-              <span className="flex items-center">
-                <Plus />
-              </span>
-              <span className="flex-1 flex items-center justify-center">
-                {t('add_content')}
-              </span>
-            </button>
-          </>
+          <button
+            className="btn flex items-center justify-center gap-2 w-full sm:w-auto"
+            style={{ minHeight: 48 }}
+            onClick={() => setAddContentShow(true)}
+          >
+            <span className="flex items-center">
+              <Plus />
+            </span>
+            <span className="flex-1 flex items-center justify-center">
+              {t('add_content')}
+            </span>
+          </button>
         ) : null}
       </div>
 
