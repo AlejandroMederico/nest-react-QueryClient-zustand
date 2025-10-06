@@ -7,6 +7,7 @@ import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { ContentModule } from './content/content.module';
 import { CourseModule } from './course/course.module';
+import { FavoriteModule } from './favorite/favorite.module';
 import { HealthModule } from './health/health.module';
 import { StatsModule } from './stats/stats.module';
 import { UserModule } from './user/user.module';
@@ -25,6 +26,7 @@ import { UserModule } from './user/user.module';
     ContentModule,
     StatsModule,
     HealthModule,
+    FavoriteModule,
   ],
   controllers: [],
   providers: [],
