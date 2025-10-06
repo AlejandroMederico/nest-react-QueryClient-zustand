@@ -12,6 +12,20 @@ import { ContentQuery } from './content.query';
 export class ContentService {
   constructor(private readonly courseService: CourseService) {}
 
+  async findLatestWithCourse(limit = 5): Promise<Content[]> {
+    try {
+      return await Content.find({
+        relations: ['course'],
+        order: { dateCreated: 'DESC' },
+        take: limit,
+      });
+    } catch (error) {
+      throw new HttpException(
+        `ContentService.findLatestWithCourse: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
   async save(
     courseId: string,
     createContentDto: CreateContentDto,
