@@ -1,8 +1,8 @@
 import React, { lazy, Suspense, useEffect, useState } from 'react';
+import { Loader } from 'react-feather';
 import { useTranslation } from 'react-i18next';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 
-import { Spinner } from './components/shared/Spinner';
 import { AuthRoute, PrivateRoute } from './Route';
 import { authService } from './services/AuthService';
 import useAuth from './store/authStore';
@@ -17,7 +17,7 @@ const Contact = lazy(() => import('./pages/Contact'));
 function App() {
   const { authenticatedUser, setAuthenticatedUser } = useAuth();
   const [isLoaded, setIsLoaded] = useState(false);
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
 
   useEffect(() => {
     let isMounted = true;
@@ -38,7 +38,7 @@ function App() {
     };
   }, [authenticatedUser, setAuthenticatedUser]);
 
-  if (!isLoaded) return <Spinner />;
+  if (!isLoaded) return <Loader className="h-16 w-16 mx-auto" />;
 
   return (
     <>
@@ -52,7 +52,7 @@ function App() {
         </button>
       </div>
       <Router>
-        <Suspense fallback={<Spinner />}>
+        <Suspense fallback={<Loader className="h-16 w-16 mx-auto" />}>
           <Switch>
             <PrivateRoute exact path="/" component={Dashboard} />
             <PrivateRoute
