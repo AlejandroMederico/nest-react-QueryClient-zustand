@@ -26,6 +26,7 @@ export class ContentService {
       );
     }
   }
+
   async save(
     courseId: string,
     createContentDto: CreateContentDto,
@@ -189,7 +190,7 @@ export class ContentService {
         content.name = updateContentDto.name;
       if (updateContentDto.description !== undefined)
         content.description = updateContentDto.description;
-
+      content.dateCreated = new Date();
       if (image) {
         const uploadDir = path.resolve(__dirname, '../../shared/upload');
         const ext = path.extname(image.originalname) || '.jpg';

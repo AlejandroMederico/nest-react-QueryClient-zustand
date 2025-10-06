@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from 'react-query';
 
 import LatestUpdates from '../components/dashboard/LatestUpdates';
+import ProfileEditButton from '../components/dashboard/ProfileEditButton';
 import Layout from '../components/layout';
 import { statsService } from '../services/StatsService';
 import useAuth from '../store/authStore';
@@ -15,7 +16,9 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <h1 className="font-semibold text-3xl my-3">{t('dashboard')}</h1>
+      <div className="relative">
+        <h1 className="font-semibold text-3xl my-3">{t('dashboard')}</h1>
+      </div>
       <hr />
       <div className="mt-5 flex flex-col gap-5">
         {!isLoading ? (
@@ -48,7 +51,7 @@ export default function Dashboard() {
             </div>
           </div>
         ) : null}
-
+        <ProfileEditButton />
         {/* <UpdateProfile /> */}
         <LatestUpdates />
       </div>

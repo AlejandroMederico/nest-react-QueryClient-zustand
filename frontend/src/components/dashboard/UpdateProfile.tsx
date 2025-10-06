@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import React from 'react';
+import React, { useState } from 'react';
 import { Loader } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +8,11 @@ import UpdateUserRequest from '../../models/user/UpdateUserRequest';
 import { userService } from '../../services/UserService';
 import useAuth from '../../store/authStore';
 
-export default function UpdateProfile() {
+interface UpdateProfileProps {
+  onClose?: () => void;
+}
+
+const UpdateProfile: React.FC<UpdateProfileProps> = ({ onClose }) => {
   const { t } = useTranslation();
   const { authenticatedUser } = useAuth();
   const [error, setError] = useState<string>();
@@ -42,17 +45,17 @@ export default function UpdateProfile() {
 
   if (!isLoading) {
     return (
-      <div className="card shadow">
+      <div className="card shadow max-w-lg mx-auto p-8">
         <form
-          className="flex mt-3 flex-col gap-3 justify-center md:w-1/2 lg:w-1/3 mx-auto items-center"
+          className="flex flex-col gap-6 justify-center w-full items-center"
           onSubmit={handleSubmit(handleUpdateUser)}
         >
-          <h1 className="font-semibold text-4xl mb-10">
+          <h1 className="font-semibold text-4xl mb-8 text-center">
             {t('welcome') + ' ' + data.firstName}
           </h1>
           <hr />
-          <div className="flex gap-3 w-full">
-            <div className="w-1/2">
+          <div className="flex gap-4 w-full">
+            <div className="w-1/2 flex flex-col gap-2">
               <label className="font-semibold">{t('first_name')}</label>
               <input
                 type="text"
@@ -63,7 +66,7 @@ export default function UpdateProfile() {
                 {...register('firstName')}
               />
             </div>
-            <div className="w-1/2">
+            <div className="w-1/2 flex flex-col gap-2">
               <label className="font-semibold">{t('last_name')}</label>
               <input
                 type="text"
@@ -75,7 +78,7 @@ export default function UpdateProfile() {
               />
             </div>
           </div>
-          <div className="w-full">
+          <div className="w-full flex flex-col gap-2">
             <label className="font-semibold">{t('username')}</label>
             <input
               type="text"
@@ -86,7 +89,7 @@ export default function UpdateProfile() {
               {...register('username')}
             />
           </div>
-          <div className="w-full">
+          <div className="w-full flex flex-col gap-2">
             <label className="font-semibold">{t('password')}</label>
             <input
               type="password"
@@ -96,7 +99,7 @@ export default function UpdateProfile() {
               {...register('password')}
             />
           </div>
-          <button className="btn w-full" disabled={isSubmitting}>
+          <button className="btn w-full mt-4" disabled={isSubmitting}>
             {isSubmitting ? (
               <Loader className="animate-spin mx-auto" />
             ) : (
@@ -114,4 +117,6 @@ export default function UpdateProfile() {
   }
 
   return null;
-}
+};
+
+export default UpdateProfile;
