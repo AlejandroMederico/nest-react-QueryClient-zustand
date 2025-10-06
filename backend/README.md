@@ -1,3 +1,15 @@
+# 🆕 Cambios y mejoras recientes
+
+### Backend
+
+- Manejo eficiente de información: Se eliminó el refresco automático de datos y se agregó un endpoint para refrescar manualmente desde el frontend.
+- Filtrado, orden y paginación: Los listados de cursos, contenidos y usuarios ahora permiten filtrar, ordenar y paginar desde el backend.
+- Panel principal: Las estadísticas de usuarios solo se muestran para el rol “admin”. Para otros roles se muestran novedades (últimos cursos agregados/actualizados). La gestión de credenciales y datos personales se separó en otra sección.
+- Gestión de imágenes: Al eliminar un contenido, también se elimina la imagen asociada en `shared/upload` usando el path guardado en la base de datos.
+- Favoritos: Se añadió la funcionalidad para agregar/quitar cursos de la lista de favoritos.
+- Soporte multilenguaje: Mensajes y endpoints preparados para internacionalización.
+- Sección Contacto: Endpoint para recibir mensajes desde el frontend y reenviarlos por email (Nodemailer/SMTP).
+
 # Urbano Backend (NestJS + TypeORM + JWT)
 
 API del proyecto **Urbano** construida con **NestJS 7**, **TypeORM 0.2.x** y **PostgreSQL**. Incluye autenticación con **JWT**, **Swagger** en `/api/docs` y comandos de **migraciones** listos.

@@ -1,3 +1,15 @@
+# 🆕 Cambios y mejoras recientes
+
+### Frontend
+
+- React Query: Se eliminó el refresco automático cada segundo. Ahora hay botón de refrescar y actualización por interacción del usuario.
+- Filtrado, orden y paginación: Tablas de cursos, contenidos y usuarios con filtros, orden y paginación conectados al backend.
+- Panel principal: Estadísticas adaptadas por rol. Novedades y últimos cursos para usuarios no admin.
+- Carga/edición de imágenes: Permite subir y editar imágenes en contenidos. Elimina la imagen al borrar el contenido.
+- Favoritos: Agregar/quitar cursos favoritos.
+- Multilenguaje: Selector de idioma inglés/español. Todo el frontend internacionalizado.
+- Contacto: Formulario responsivo que envía emails y muestra mensajes claros de éxito/error.
+
 # Urbano Frontend (React + CRACO + Tailwind)
 
 Panel de administración React (CRA) con **CRACO**, **TailwindCSS**, **React Query** y **Zustand**. Este README está optimizado para correr en desarrollo, construir para producción y destrabar errores comunes de build.

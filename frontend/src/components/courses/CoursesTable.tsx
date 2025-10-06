@@ -113,19 +113,15 @@ export default function CoursesTable({
       <div className="table-container">
         <Table
           columns={
-        ['admin', 'editor'].includes(authenticatedUser?.role)
+            ['admin', 'editor'].includes(authenticatedUser?.role)
               ? [
                   t('name'),
                   t('description'),
                   t('created_updated'),
                   t('actions'),
                 ]
-              : [
-                  t('name'),
-                  t('description'),
-                  t('created_updated'),
-                ]
-        }
+              : [t('name'), t('description'), t('created_updated')]
+          }
         >
           {isLoading
             ? null
