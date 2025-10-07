@@ -33,7 +33,7 @@ jobs:
         working-directory: backend
         run: yarn install --frozen-lockfile
 
-      - name: Run backend tests
+      - name: Run backend unit tests
         working-directory: backend
         env:
           DATABASE_HOST: localhost
@@ -41,9 +41,22 @@ jobs:
           DATABASE_USER: urbano
           DATABASE_PASSWORD: urbano
           DATABASE_NAME: urbano
+        run: yarn test
+
+      - name: Start backend server
+        working-directory: backend
+        run: yarn start &
+
+      - name: Wait for backend to be ready
         run: |
-          yarn test
-          yarn test:e2e
+          for i in {1..30}; do
+            nc -z localhost 5000 && break
+            sleep 1
+          done
+
+      - name: Run backend e2e tests
+        working-directory: backend
+        run: yarn test:e2e
 
       - name: Install frontend dependencies
         working-directory: frontend
