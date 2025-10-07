@@ -65,15 +65,4 @@ export const usersKeys = {
   detail: (id: string) => [...usersKeys.all, 'detail', id] as const,
 };
 
-function clean(p: UsersListParams) {
-  const { page, limit, sort, order, q, role } = p;
-  return {
-    page,
-    limit,
-    sort: sort || 'createdAt',
-    order: order || 'desc',
-    q: q || '',
-    role: role || '',
-  };
-}
 export type { UsersListParams };

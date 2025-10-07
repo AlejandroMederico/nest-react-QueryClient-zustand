@@ -52,7 +52,6 @@ export default function Dashboard() {
           </div>
         ) : null}
         <ProfileEditButton />
-        {/* <UpdateProfile /> */}
         <LatestUpdates />
       </div>
     </Layout>

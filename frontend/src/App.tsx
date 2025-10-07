@@ -17,7 +17,6 @@ const Contact = lazy(() => import('./pages/Contact'));
 function App() {
   const { setAuthenticatedUser, setToken, logout } = useAuth();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [sessionError, setSessionError] = useState<string | null>(null);
   const { i18n } = useTranslation();
 
   useEffect(() => {
@@ -30,7 +29,6 @@ function App() {
           if (isMounted) {
             setAuthenticatedUser(authResponse.user ?? null);
             setToken(authResponse.token);
-            setSessionError(null);
           }
         } else {
           if (isMounted) {
@@ -42,9 +40,6 @@ function App() {
         if (isMounted) {
           setAuthenticatedUser(null);
           setToken(undefined);
-          setSessionError(
-            'Sesión expirada. Por favor inicia sesión nuevamente.',
-          );
           logout();
         }
       } finally {
@@ -69,22 +64,6 @@ function App() {
           EN
         </button>
       </div>
-      {sessionError && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 60,
-            right: 10,
-            zIndex: 1000,
-            background: '#fee',
-            color: '#900',
-            padding: '8px 16px',
-            borderRadius: 8,
-          }}
-        >
-          {sessionError}
-        </div>
-      )}
       <Router>
         <Suspense fallback={<Loader className="h-16 w-16 mx-auto" />}>
           <Switch>

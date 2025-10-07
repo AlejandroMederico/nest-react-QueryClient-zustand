@@ -1,3 +1,4 @@
+export {};
 describe('ApiService request interceptor', () => {
   beforeEach(() => {
     localStorage.clear();

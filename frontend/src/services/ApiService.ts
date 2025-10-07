@@ -19,7 +19,7 @@ function getToken() {
   return store?.token ?? localStorage.getItem('token') ?? undefined;
 }
 
-function setToken(token?: string) {
+export function setToken(token?: string) {
   const store = authStore?.getState?.();
   store?.setToken?.(token);
   if (token) {

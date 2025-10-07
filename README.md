@@ -1,10 +1,25 @@
 # Urbano – Full-Stack Admin Panel (NestJS + React + Docker)
 
+![CI](https://github.com/AlejandroMederico/nest-react-QueryClient-zustand/actions/workflows/ci.yml/badge.svg)
+
 **🇪🇸 Español / 🇬🇧 English**
 
 ---
 
 ## 🚀 Descripción del Proyecto / Project Overview
+
+---
+
+## ⚡ Requisitos mínimos / Minimum Requirements
+
+| Software       | Versión recomendada |
+| -------------- | ------------------- |
+| Node.js        | >= 18.x             |
+| Yarn           | >= 1.22             |
+| Docker         | >= 20.x             |
+| Docker Compose | >= 2.x              |
+
+---
 
 **🇪🇸**  
 Urbano Admin Panel es un proyecto full-stack que combina **NestJS**, **React**, **PostgreSQL** y **Docker** para crear un sistema de administración completo. Permite gestionar usuarios, cursos y contenidos con autenticación basada en roles, endpoints documentados con Swagger y un frontend moderno con diseño responsivo.
@@ -48,23 +63,57 @@ Urbano Admin Panel is a full-stack project built with **NestJS**, **React**, **P
 
 ## 🐳 Despliegue con Docker Compose / Deploy with Docker Compose
 
+---
+
+## 🗄️ Migraciones y Base de Datos / Migrations & Database
+
+**🇪🇸**
+Para crear o actualizar el esquema de la base de datos, ejecuta:
+
+```bash
+cd backend
+yarn typeorm migration:run
+```
+
+**🇬🇧**
+To create or update the database schema, run:
+
+```bash
+cd backend
+yarn typeorm migration:run
+```
+
+Para restaurar un backup, consulta la documentación de PostgreSQL.
+
+---
+
 **🇪🇸**  
 La forma más rápida de ejecutar todo el sistema es con Docker Compose.
 
 **🇬🇧**  
 The fastest way to run the entire system is with Docker Compose.
 
-```bash
+````bash
 # Clonar el repositorio
 git clone https://github.com/yourusername/urbano-admin.git
 cd urbano-admin
 
-# Crear el archivo .env en backend/
+
+# Configuración de variables de entorno / Environment Variables Setup
+
+En la carpeta `backend/` encontrarás el archivo `.env.example`, que sirve como guía para crear tu propio archivo `.env` con las variables necesarias para el proyecto. Solo debes copiarlo y personalizar los valores según tu entorno:
+
+```bash
 cp backend/.env.example backend/.env
+````
+
+Luego edita `backend/.env` con tus credenciales y configuraciones.
 
 # Levantar todos los servicios
+
 docker-compose up --build
-```
+
+````
 
 ✅ Esto iniciará:
 
@@ -98,7 +147,7 @@ DATABASE_PASSWORD=mypassword
 
 # CORS
 CORS_ORIGINS=http://localhost:3000
-```
+````
 
 ---
 
@@ -167,19 +216,13 @@ yarn test
 
 ---
 
-## 🩹 Troubleshooting
+## 🤖 Integración Continua / Continuous Integration
 
-| Problema                    | Solución                                                |
-| --------------------------- | ------------------------------------------------------- |
-| ❌ Contenedores no levantan | `docker-compose logs -f` y revisar variables de entorno |
-| ❌ CORS bloquea requests    | Agregar origen correcto en `CORS_ORIGINS`               |
-| ❌ Error en migraciones     | Ejecutar `yarn build` y luego `yarn migration:run`      |
-| ❌ Puerto ocupado           | Cambiar `3000` o `5000` en `docker-compose.yml`         |
-| ❌ DB no responde           | Usar `DATABASE_HOST=urbano-db` dentro del contenedor    |
+Este proyecto incluye un workflow de GitHub Actions que ejecuta los tests y el build automáticamente en cada push o pull request.
+
+Archivo: `.github/workflows/ci.yml`
 
 ---
-
-## 📈 Próximos Pasos / Next Steps
 
 - [ ] CI/CD con GitHub Actions
 - [ ] API Rate Limiting
@@ -206,6 +249,17 @@ yarn test
 3. Commit changes: `git commit -m "Add new feature"`
 4. Push the branch: `git push origin feature/new-feature`
 5. Open a Pull Request
+
+---
+
+## 🔗 Enlaces Útiles / Useful Links
+
+- [NestJS Docs](https://docs.nestjs.com/)
+- [React Docs](https://react.dev/)
+- [TypeORM Docs](https://typeorm.io/)
+- [PostgreSQL Docs](https://www.postgresql.org/docs/)
+- [Docker Docs](https://docs.docker.com/)
+- [GitHub Actions Docs](https://docs.github.com/en/actions)
 
 ---
 

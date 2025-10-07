@@ -1,6 +1,7 @@
 import AuthResponse from '../models/auth/AuthResponse';
 import LoginRequest from '../models/auth/LoginRequest';
 import apiService from './ApiService';
+import { setToken } from './ApiService';
 
 class AuthService {
   async login(loginRequest: LoginRequest): Promise<AuthResponse> {
@@ -9,6 +10,7 @@ class AuthService {
       loginRequest,
     );
     apiService.defaults.headers.Authorization = `Bearer ${data.token}`;
+    setToken(data.token);
     return data;
   }
 
@@ -20,6 +22,8 @@ class AuthService {
   async refresh(): Promise<AuthResponse> {
     const { data } = await apiService.post<AuthResponse>('/auth/refresh', {});
     apiService.defaults.headers.Authorization = `Bearer ${data.token}`;
+    // Guarda el token en localStorage
+    setToken(data.token);
     return data;
   }
 }
