@@ -345,9 +345,9 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1 :5000/api/v1/users/{{user_id}}",
+          "raw": "http://127.0.0.1:5000/api/v1/users/{{user_id}}",
           "protocol": "http",
-          "host": ["127.0.0.1 "],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "users", "{{user_id}}"]
         }
@@ -387,9 +387,9 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://127.0.0.1 :5000/api/v1/users/{{user_id}}",
+          "raw": "http://127.0.0.1:5000/api/v1/users/{{user_id}}",
           "protocol": "http",
-          "host": ["127.0.0.1 "],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "users", "{{user_id}}"]
         }
@@ -490,9 +490,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://127.0.0.1 :5000/api/v1/courses",
+          "raw": "http://127.0.0.1:5000/api/v1/courses",
           "protocol": "http",
-          "host": ["127.0.0.1 "],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "courses"]
         }
@@ -594,9 +594,9 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1 :5000/api/v1/courses/{{course_id}}",
+          "raw": "http://127.0.0.1:5000/api/v1/courses/{{course_id}}",
           "protocol": "http",
-          "host": ["127.0.0.1 "],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "courses", "{{course_id}}"]
         }
@@ -699,9 +699,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://127.0.0.1 :5000/api/v1/courses/{{course_id}}/contents",
+          "raw": "http://127.0.0.1:5000/api/v1/courses/{{course_id}}/contents",
           "protocol": "http",
-          "host": ["127.0.0.1 "],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "courses", "{{course_id}}", "contents"]
         }
@@ -805,9 +805,9 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://127.0.0.1 :5000/api/v1/courses/{{course_id}}/contents/{{content_id}}",
+          "raw": "http://127.0.0.1:5000/api/v1/courses/{{course_id}}/contents/{{content_id}}",
           "protocol": "http",
-          "host": ["127.0.0.1 "],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": [
             "api",
@@ -855,9 +855,9 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://127.0.0.1 :5000/api/v1/courses/{{course_id}}",
+          "raw": "http://127.0.0.1:5000/api/v1/courses/{{course_id}}",
           "protocol": "http",
-          "host": ["127.0.0.1 "],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "courses", "{{course_id}}"]
         }
