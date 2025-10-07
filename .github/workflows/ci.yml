@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:14
+        env:
+          POSTGRES_DB: urbano
+          POSTGRES_USER: urbano
+          POSTGRES_PASSWORD: urbano
+        ports:
+          - 5432:5432
+        options: >
+          --health-cmd="pg_isready -U urbano" --health-interval=10s --health-timeout=5s --health-retries=5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: yarn install --frozen-lockfile
+
+      - name: Run backend tests
+        working-directory: backend
+        env:
+          DATABASE_HOST: localhost
+          DATABASE_PORT: 5432
+          DATABASE_USER: urbano
+          DATABASE_PASSWORD: urbano
+          DATABASE_NAME: urbano
+        run: |
+          yarn test
+          yarn test:e2e
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: yarn test
+
+      - name: Build backend
+        working-directory: backend
+        run: yarn build
+
+      - name: Build frontend
+        working-directory: frontend
+        run: yarn build
