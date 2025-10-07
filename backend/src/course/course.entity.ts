@@ -19,7 +19,7 @@ export class Course extends BaseEntity {
   @Column()
   description: string;
 
-  @Column()
+  @Column({ nullable: true })
   dateCreated: Date;
 
   @OneToMany(() => Content, (content) => content.course)

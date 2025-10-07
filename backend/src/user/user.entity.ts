@@ -1,11 +1,5 @@
 import { Exclude } from 'class-transformer';
-import {
-  BaseEntity,
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 import { Role } from '../enums/role.enum';
 
@@ -37,6 +31,6 @@ export class User extends BaseEntity {
   @Column({ default: true })
   isActive: boolean;
 
-  @CreateDateColumn()
+  @Column({ nullable: true })
   createdAt: Date;
 }

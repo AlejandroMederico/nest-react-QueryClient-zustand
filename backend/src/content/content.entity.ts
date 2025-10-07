@@ -23,7 +23,7 @@ export class Content extends BaseEntity {
   @Column({ nullable: true })
   image?: string;
 
-  @Column()
+  @Column({ nullable: true })
   dateCreated: Date;
 
   @Column({ select: false, nullable: false })
