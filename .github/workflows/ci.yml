@@ -47,10 +47,13 @@ jobs:
 
       - name: Start backend server
         working-directory: backend
-        run: yarn start &
+        run: yarn start > backend.log 2>&1 &
+
+      - name: Show backend logs
+        run: cat backend/backend.log || true
 
       - name: Wait for backend to be ready
-        run: npx wait-on http://localhost:5000/api/v1/auth/login
+        run: npx wait-on http://localhost:5000/api/v1/health
 
       - name: Run backend e2e tests
         working-directory: backend
