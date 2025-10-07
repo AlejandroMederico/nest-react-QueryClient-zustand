@@ -13,9 +13,9 @@ jobs:
       db:
         image: postgres:14
         env:
-          POSTGRES_DB: urbano
-          POSTGRES_USER: urbano
-          POSTGRES_PASSWORD: urbano
+          POSTGRES_DB: carna-database
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 1234
         ports:
           - 5432:5432
         options: >-
@@ -40,9 +40,9 @@ jobs:
         env:
           DATABASE_HOST: localhost
           DATABASE_PORT: 5432
-          DATABASE_USER: urbano
-          DATABASE_PASSWORD: urbano
-          DATABASE_NAME: urbano
+          DATABASE_USER: postgres
+          DATABASE_PASSWORD: 1234
+          DATABASE_NAME: carna-database
         run: yarn test
 
       - name: Start backend server
