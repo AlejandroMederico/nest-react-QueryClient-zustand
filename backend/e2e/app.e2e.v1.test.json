@@ -198,9 +198,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/v1/users",
+          "raw": "http://127.0.0.1:5000/api/v1/users",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "users"]
         }
@@ -249,9 +249,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/v1/users/{{user_id}}",
+          "raw": "http://127.0.0.1:5000/api/v1/users/{{user_id}}",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "users", "{{user_id}}"]
         }
@@ -345,9 +345,9 @@
           }
         },
         "url": {
-          "raw": "http://localhost:5000/api/v1/users/{{user_id}}",
+          "raw": "http://127.0.0.1 :5000/api/v1/users/{{user_id}}",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1 "],
           "port": "5000",
           "path": ["api", "v1", "users", "{{user_id}}"]
         }
@@ -387,9 +387,9 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/v1/users/{{user_id}}",
+          "raw": "http://127.0.0.1 :5000/api/v1/users/{{user_id}}",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1 "],
           "port": "5000",
           "path": ["api", "v1", "users", "{{user_id}}"]
         }
@@ -445,9 +445,9 @@
           }
         },
         "url": {
-          "raw": "http://localhost:5000/api/v1/courses",
+          "raw": "http://127.0.0.1:5000/api/v1/courses",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "courses"]
         }
@@ -490,9 +490,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/v1/courses",
+          "raw": "http://127.0.0.1 :5000/api/v1/courses",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1 "],
           "port": "5000",
           "path": ["api", "v1", "courses"]
         }
@@ -538,9 +538,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}",
+          "raw": "http://127.0.0.1:5000/api/v1/courses/{{course_id}}",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "courses", "{{course_id}}"]
         }
@@ -594,9 +594,9 @@
           }
         },
         "url": {
-          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}",
+          "raw": "http://127.0.0.1 :5000/api/v1/courses/{{course_id}}",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1 "],
           "port": "5000",
           "path": ["api", "v1", "courses", "{{course_id}}"]
         }
@@ -654,9 +654,9 @@
           }
         },
         "url": {
-          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}/contents",
+          "raw": "http://127.0.0.1:5000/api/v1/courses/{{course_id}}/contents",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "courses", "{{course_id}}", "contents"]
         }
@@ -699,9 +699,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}/contents",
+          "raw": "http://127.0.0.1 :5000/api/v1/courses/{{course_id}}/contents",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1 "],
           "port": "5000",
           "path": ["api", "v1", "courses", "{{course_id}}", "contents"]
         }
@@ -755,9 +755,9 @@
           }
         },
         "url": {
-          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}/contents/{{content_id}}",
+          "raw": "http://127.0.0.1:5000/api/v1/courses/{{course_id}}/contents/{{content_id}}",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": [
             "api",
@@ -805,9 +805,9 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}/contents/{{content_id}}",
+          "raw": "http://127.0.0.1 :5000/api/v1/courses/{{course_id}}/contents/{{content_id}}",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1 "],
           "port": "5000",
           "path": [
             "api",
@@ -855,9 +855,9 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/v1/courses/{{course_id}}",
+          "raw": "http://127.0.0.1 :5000/api/v1/courses/{{course_id}}",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1 "],
           "port": "5000",
           "path": ["api", "v1", "courses", "{{course_id}}"]
         }
@@ -890,9 +890,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/v1/stats",
+          "raw": "http://127.0.0.1:5000/api/v1/stats",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "stats"]
         },
@@ -942,9 +942,9 @@
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/v1/auth/logout",
+          "raw": "http://127.0.0.1:5000/api/v1/auth/logout",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "auth", "logout"]
         }
