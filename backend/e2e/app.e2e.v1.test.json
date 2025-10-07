@@ -43,9 +43,9 @@
           }
         },
         "url": {
-          "raw": "http://localhost:5000/api/v1/auth/login",
+          "raw": "http://127.0.0.1:5000/api/v1/auth/login",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "auth", "login"]
         }
@@ -77,9 +77,9 @@
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "http://localhost:5000/api/v1/auth/refresh",
+          "raw": "http://127.0.0.1:5000/api/v1/auth/refresh",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "auth", "refresh"]
         }
@@ -153,9 +153,9 @@
           }
         },
         "url": {
-          "raw": "http://localhost:5000/api/v1/users",
+          "raw": "http://127.0.0.1:5000/api/v1/users",
           "protocol": "http",
-          "host": ["localhost"],
+          "host": ["127.0.0.1"],
           "port": "5000",
           "path": ["api", "v1", "users"]
         }
